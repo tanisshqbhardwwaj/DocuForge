@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: docuforge-api
+    env: node
+    buildCommand: npm run install-all
+    startCommand: npm run server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    # Note: Free tier on Render has ephemeral disk, meaning SQLite database resets on restart.
+    # To keep data persistent, a paid disk is required, or use a hosted DB like Turso/PostgreSQL.

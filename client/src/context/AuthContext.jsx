@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 
 const AuthContext = createContext(null)
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -18,7 +19,7 @@ export function AuthProvider({ children }) {
 
   const fetchUser = async () => {
     try {
-      const res = await fetch('/api/auth/me', {
+      const res = await fetch(`${API_BASE}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (res.ok) {
@@ -36,7 +37,7 @@ export function AuthProvider({ children }) {
   }
 
   const login = async (email, password) => {
-    const res = await fetch('/api/auth/login', {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -51,7 +52,7 @@ export function AuthProvider({ children }) {
   }
 
   const signup = async (company_name, email, phone, password) => {
-    const res = await fetch('/api/auth/signup', {
+    const res = await fetch(`${API_BASE}/api/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ company_name, email, phone, password })
@@ -66,7 +67,7 @@ export function AuthProvider({ children }) {
   }
 
   const saveOrganization = async (orgData) => {
-    const res = await fetch('/api/auth/organization', {
+    const res = await fetch(`${API_BASE}/api/auth/organization`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -88,7 +89,7 @@ export function AuthProvider({ children }) {
 
   // Helper for authenticated API calls
   const authFetch = (url, options = {}) => {
-    return fetch(url, {
+    return fetch(`${API_BASE}${url}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
