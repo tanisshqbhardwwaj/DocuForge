@@ -1,0 +1,244 @@
+import { useState, useRef, useCallback, useEffect } from 'react'
+import DocumentForm from '../components/DocumentForm'
+import DocumentPreview from '../components/DocumentPreview'
+import Toast from '../components/Toast'
+import { useAuth } from '../context/AuthContext'
+
+const STORAGE_KEY = 'docuforge_draft'
+
+export default function Generator() {
+  const { user, authFetch } = useAuth()
+
+  // Auto-fill sender details from organization profile
+  const defaultState = () => ({
+    title: 'TAX INVOICE',
+    doc_number: `INV-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+    date: new Date().toISOString().split('T')[0],
+    due_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+    sender_name: user?.org_name || user?.company_name || '',
+    sender_address: user?.org_address || '',
+    sender_email: user?.org_email || user?.email || '',
+    sender_phone: user?.org_phone || user?.phone || '',
+    sender_gstin: user?.org_gstin || '',
+    client_name: '',
+    client_address: '',
+    client_email: '',
+    client_phone: '',
+    client_gstin: '',
+    place_of_supply: user?.org_state || '',
+    payment_terms: 'Net 30',
+    items: [{ description: '', quantity: 1, unit_price: 0, hsn: '' }],
+    tax_rate: user?.org_gst_registered ? 18 : 0,
+    discount: 0,
+    notes: '',
+    terms: 'Please pay the invoice before the due date.',
+    bank_name: '', bank_account: '', bank_ifsc: '', bank_branch: '',
+  })
+
+  // Restore draft from localStorage if available
+  const getInitialState = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        // Merge with defaults so new fields are always present
+        return { ...defaultState(), ...parsed }
+      }
+    } catch { /* ignore corrupt data */ }
+    return defaultState()
+  }
+
+  const [formData, setFormData] = useState(getInitialState)
+  const [toast, setToast] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const previewRef = useRef(null)
+
+  // Auto-save form data to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+    } catch { /* quota exceeded — ignore */ }
+  }, [formData])
+
+  // Derived calculations
+  const subtotal = formData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0)
+  const taxAmount = subtotal * (formData.tax_rate / 100)
+  const total = subtotal + taxAmount
+
+  const handleChange = useCallback((field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }, [])
+
+  const handleItemChange = useCallback((index, field, value) => {
+    setFormData(prev => {
+      const items = [...prev.items]
+      items[index] = { ...items[index], [field]: value }
+      return { ...prev, items }
+    })
+  }, [])
+
+  const addItem = useCallback(() => {
+    setFormData(prev => ({
+      ...prev,
+      items: [...prev.items, { description: '', quantity: 1, unit_price: 0 }]
+    }))
+  }, [])
+
+  const removeItem = useCallback((index) => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }))
+  }, [])
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3500)
+  }
+
+  const handleGeneratePDF = async () => {
+    if (saving) return
+    setSaving(true)
+
+    try {
+      // 1. Save to database via POST
+      const docPayload = {
+        ...formData,
+        doc_type: formData.title.toLowerCase().includes('purchase') ? 'purchase_order' : 'invoice',
+        subtotal,
+        tax_amount: taxAmount,
+        total,
+      }
+
+      const res = await authFetch('/api/documents', {
+        method: 'POST',
+        body: JSON.stringify(docPayload),
+      })
+
+      if (!res.ok) throw new Error('Failed to save document')
+
+      // 2. Generate PDF from preview
+      const element = previewRef.current
+      if (!element) throw new Error('Preview not found')
+
+      // Clone the element into a full-size off-screen container
+      // This prevents html2pdf from clipping content inside scroll containers
+      const clone = element.cloneNode(true)
+      clone.style.position = 'absolute'
+      clone.style.left = '-9999px'
+      clone.style.top = '0'
+      clone.style.width = '210mm'  // A4 width
+      clone.style.overflow = 'visible'
+      clone.style.height = 'auto'
+      clone.style.maxHeight = 'none'
+      document.body.appendChild(clone)
+
+      const html2pdf = (await import('html2pdf.js')).default
+
+      const pdfFilename = `${formData.doc_number}.pdf`
+
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: pdfFilename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          width: clone.scrollWidth,
+          height: clone.scrollHeight,
+          windowWidth: clone.scrollWidth,
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      }
+
+      // Use outputPdf('blob') + manual download to guarantee correct filename
+      const pdfBlob = await html2pdf().set(opt).from(clone).outputPdf('blob')
+
+      // Clean up clone immediately
+      document.body.removeChild(clone)
+
+      // Trigger download with the correct filename
+      const url = URL.createObjectURL(pdfBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = pdfFilename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      showToast('Document saved & PDF downloaded!', 'success')
+
+      // Reset form and clear draft
+      const fresh = defaultState()
+      setFormData(fresh)
+      localStorage.removeItem(STORAGE_KEY)
+    } catch (err) {
+      console.error(err)
+      showToast(err.message || 'Something went wrong', 'error')
+      // Clean up clone if error
+      const leftover = document.querySelector('[style*="-9999px"]')
+      if (leftover) leftover.remove()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="generator-page">
+      <div className="generator-header">
+        <div>
+          <h1 id="generator-title">
+            <i className="fas fa-magic"></i> Document Generator
+          </h1>
+          <p className="subtitle">Fill in the details and watch your document come to life</p>
+        </div>
+        <button
+          className="btn btn-primary btn-generate"
+          onClick={handleGeneratePDF}
+          disabled={saving}
+          id="btn-generate-pdf"
+        >
+          {saving ? (
+            <><i className="fas fa-spinner fa-spin"></i> Processing...</>
+          ) : (
+            <><i className="fas fa-file-pdf"></i> Generate &amp; Download PDF</>
+          )}
+        </button>
+      </div>
+
+      <div className="split-pane">
+        <div className="pane-left">
+          <DocumentForm
+            formData={formData}
+            onChange={handleChange}
+            onItemChange={handleItemChange}
+            onAddItem={addItem}
+            onRemoveItem={removeItem}
+            subtotal={subtotal}
+            taxAmount={taxAmount}
+            total={total}
+          />
+        </div>
+        <div className="pane-right">
+          <div className="preview-wrapper">
+            <div className="preview-label">
+              <i className="fas fa-eye"></i> Live Preview
+            </div>
+            <DocumentPreview
+              ref={previewRef}
+              data={formData}
+              subtotal={subtotal}
+              taxAmount={taxAmount}
+              total={total}
+            />
+          </div>
+        </div>
+      </div>
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+    </div>
+  )
+}
