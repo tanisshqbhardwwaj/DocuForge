@@ -1,62 +1,73 @@
 # DocuForge — Live Document Generator
 
-A professional, Zoho-inspired live document generator for creating GST-compliant Invoices and Payment Orders. Built with a modern dark-mode aesthetic and real-time preview capabilities.
+I built this because generating GST-compliant invoices and payment orders felt way more painful than it should be. DocuForge lets you fill a form and get a real, properly formatted PDF out the other end — live preview included, so you're not flying blind.
 
-## 🚀 How to Run Locally
+The UI takes heavy inspiration from Zoho's design language, with a dark-mode aesthetic baked in from the start.
 
-### 1. Prerequisites
-- **Node.js** (v18 or higher recommended)
-- **npm** (comes with Node.js)
+---
 
-### 2. Setup & Installation
-Clone the repository and install all dependencies with one command:
+## Getting Started
+
+### Prerequisites
+- Node.js v18+
+- npm (ships with Node)
+
+### Install
 
 ```bash
-# Install everything (Root, Client, and Server)
+# Installs dependencies for root, client, and server in one shot
 npm run install-all
 ```
 
-### 3. Running the Project
-You can now run both the backend and frontend at the same time from the root folder.
+### Run
 
-**Start both at once:**
 ```bash
 npm run dev
 ```
 
-Alternatively, you can run them individually:
-- **Backend:** `npm run server`
-- **Frontend:** `npm run client`
+This starts both the backend and frontend together. If you need them separately:
+
+```bash
+npm run server   # backend only
+npm run client   # frontend only
+```
 
 ---
 
-## 📄 PDF Generation
+## PDF Generation
 
-### Library Choice: `html2pdf.js`
-We chose **`html2pdf.js`** for this project for several key reasons:
-- **DOM-to-PDF Fidelity**: It uses `html2canvas` and `jsPDF` under the hood, allowing us to maintain the exact look and feel of our "Live Preview" CSS in the final PDF.
-- **Ease of Implementation**: It allows for rapid development by leveraging existing HTML/CSS layouts rather than having to manually draw shapes and text on a PDF canvas.
-- **Client-Side Processing**: Generating the PDF on the client reduces server load and provides an instantaneous experience for the user.
+We're using **`html2pdf.js`**, which combines `html2canvas` and `jsPDF` under the hood.
 
-**Note on implementation:** To fix standard issues with filename handling and UUID generation, we utilize `.output('blob')` to create a binary object and manually trigger a download with the specific document number.
+The main reason we went with it: the live preview in the app is just HTML/CSS, and `html2pdf.js` renders that directly into the PDF. No manually re-drawing text and shapes on a canvas — what you see in the preview is (mostly) what you get in the file.
+
+It also runs entirely on the client, so no server round-trips for PDF generation.
+
+One implementation note: we use `.output('blob')` instead of the default filename approach. This gives us proper control over the filename (tied to the document number) and sidesteps some quirky behavior with UUID-based names.
 
 ---
 
-## 🛠 Features & Improvements
+## Features
 
-### Key Features Implemented:
-- **Dual Document Support**: Generate both **TAX INVOICES** and **PAYMENT ORDERS** with a single click.
-- **Real-Time Preview**: Watch your document update instantly as you fill the form.
-- **Document History**: A dashboard with sorting (Date/Amount), filtering (by type), and read-only viewing.
-- **Local Storage Fallback**: Never lose your progress—form data is automatically saved as you type.
-- **GST Compliance**: Support for HSN codes, tax breakdowns (CGST/SGST), and Indian currency formatting.
+- **Tax Invoices + Payment Orders** — both document types supported, switchable from the same form
+- **Live preview** — updates as you type, no save button needed
+- **Document history** — sortable by date or amount, filterable by type, with read-only viewing for past docs
+- **Auto-save** — form data persists in localStorage, so a refresh won't wipe your work
+- **GST compliance** — HSN codes, CGST/SGST breakdowns, Indian currency formatting
 
-### Known Bugs & Limitations:
-- **Image Loading**: Occasionally, high-resolution external images in `html2canvas` can cause rendering delays if not properly cached or if CORS is restricted.
-- **Page Breaks**: While `html2pdf` handles basic page breaks, extremely long tables (multi-page) may occasionally require manual CSS `page-break-inside: avoid` tuning for perfect alignment.
+---
 
-### Areas for Future Improvement:
-- **Cloud Storage**: Currently, document metadata is saved in SQLite, but the PDF files themselves are generated on-the-fly. Integrating AWS S3 or Google Cloud Storage would allow for persistent PDF links.
-- **User Permissions**: Adding roles (Admin, Staff) for larger organizations.
-- **Email Integration**: The ability to send the generated PDF directly to the client via SMTP or SendGrid.
-- **Template Gallery**: Providing multiple professional themes and layouts beyond the standard Zoho-inspired design.
+## Known Issues
+
+- **External images**: `html2canvas` can choke on high-res images from external URLs, especially if CORS is an issue. Images may render slowly or not at all.
+- **Long tables**: Multi-page tables sometimes need a nudge with `page-break-inside: avoid` in CSS to render cleanly across pages. Works fine for most typical invoices.
+
+---
+
+## What's Missing (Roadmap-ish)
+
+These didn't make the cut for now, but they're the obvious next steps:
+
+- **Cloud PDF storage** — Right now PDFs are generated on the fly and not stored. Hooking up S3 or GCS would let you share persistent links.
+- **User roles** — Admin/Staff separation for teams with multiple people generating docs.
+- **Email delivery** — Send the PDF directly from the app via SMTP or SendGrid.
+- **More templates** — The current design is Zoho-inspired, but a template gallery would open it up considerably.
