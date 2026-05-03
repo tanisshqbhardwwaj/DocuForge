@@ -83,12 +83,27 @@ export default function Generator() {
   const handleChange = useCallback((field, value) => {
     setFormData(prev => {
       const next = { ...prev, [field]: value }
-      // Auto-sync due_date when payment terms or invoice date changes
+      
+      // 1. Auto-sync due_date when payment terms or invoice date changes
       if (field === 'payment_terms') {
         next.due_date = calcDueDate(prev.date, value)
       } else if (field === 'date') {
         next.due_date = calcDueDate(value, prev.payment_terms)
       }
+
+      // 2. Auto-swap prefix (INV vs PO) based on document title
+      if (field === 'title') {
+        if (value === 'PURCHASE ORDER') {
+          next.doc_number = prev.doc_number.replace(/^INV-/, 'PO-')
+          // If no prefix existed, just add it
+          if (!next.doc_number.startsWith('PO-')) next.doc_number = `PO-${next.doc_number}`
+        } else if (value.includes('INVOICE')) {
+          next.doc_number = prev.doc_number.replace(/^PO-/, 'INV-')
+          // If no prefix existed, just add it
+          if (!next.doc_number.startsWith('INV-')) next.doc_number = `INV-${next.doc_number}`
+        }
+      }
+      
       return next
     })
   }, [])
