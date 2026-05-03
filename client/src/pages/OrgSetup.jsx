@@ -33,6 +33,25 @@ export default function OrgSetup() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    // Basic Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (form.org_email && !emailRegex.test(form.org_email)) {
+      setError('Please enter a valid business email address');
+      return;
+    }
+
+    const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
+    if (form.org_phone && !phoneRegex.test(form.org_phone)) {
+      setError('Please enter a valid business phone number (digits only)');
+      return;
+    }
+
+    if (!form.org_state) {
+      setError('Please select a state');
+      return;
+    }
+
     setLoading(true)
     try {
       await saveOrganization(form)

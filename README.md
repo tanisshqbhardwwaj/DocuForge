@@ -1,73 +1,60 @@
-# DocuForge — Live Document Generator
+# DocuForge — Smart Billing for Growing Teams 🚀
 
-I built this because generating GST-compliant invoices and payment orders felt way more painful than it should be. DocuForge lets you fill a form and get a real, properly formatted PDF out the other end — live preview included, so you're not flying blind.
+I built DocuForge because I realized that for most small business owners, generating a professional, GST-compliant invoice feels like a chore. You either use a complex accounting software that costs a fortune, or you struggle with Excel templates that look terrible. 
 
-
+DocuForge is the "middle ground" — a sleek, professional, and dead-simple document generator that gives you a live preview of exactly what your PDF will look like before you hit download.
 
 ---
 
-## Getting Started
+## Why DocuForge?
 
-### Prerequisites
-- Node.js v18+
-- npm (ships with Node)
+*   **Smart GST Logic**: The app automatically knows if you're GST-registered. If you are, it adds HSN codes and CGST/SGST breakdowns. If not, it keeps things clean with a simple tax toggle.
+*   **Live Preview**: No more "save and hope it looks good." Every character you type updates the invoice preview in real-time.
+*   **Isolated Drafts**: I've made sure that if multiple people use the same computer, their data stays private. Drafts are isolated by user ID and wiped on logout.
+*   **Automatic Numbering**: Switch from an "Invoice" to a "Purchase Order" or "Credit Note," and the app intelligently swaps your prefixes (INV-, PO-, CN-) for you.
+*   **Zero-Setup Persistence**: Your history and organization profiles are saved securely on a persistent disk (SQLite), so your data is there whenever you come back.
 
-### Install
+---
 
+## Quick Start (For Developers)
+
+### 1. Grab the dependencies
+I've made this easy. Just run one command to install everything for the frontend and backend:
 ```bash
-# Installs dependencies for root, client, and server in one shot
 npm run install-all
 ```
 
-### Run
-
+### 2. Fire it up
+This will start your development server and the client together:
 ```bash
 npm run dev
 ```
-
-This starts both the backend and frontend together. If you need them separately:
-
-```bash
-npm run server   # backend only
-npm run client   # frontend only
-```
+Open [http://localhost:3000](http://localhost:3000) and you're ready to go!
 
 ---
 
-## PDF Generation
+## Under the Hood
 
-We're using **`html2pdf.js`**, which combines `html2canvas` and `jsPDF` under the hood.
-
-The main reason we went with it: the live preview in the app is just HTML/CSS, and `html2pdf.js` renders that directly into the PDF. No manually re-drawing text and shapes on a canvas — what you see in the preview is (mostly) what you get in the file.
-
-It also runs entirely on the client, so no server round-trips for PDF generation.
-
-One implementation note: we use `.output('blob')` instead of the default filename approach. This gives us proper control over the filename (tied to the document number) and sidesteps some quirky behavior with UUID-based names.
+*   **Frontend**: React + Vanilla CSS (No bulky frameworks, just clean, fast code).
+*   **Backend**: Node.js + Express, refactored into a professional **Controller-Service-Repository** pattern.
+*   **Database**: SQLite (using `better-sqlite3`). It's fast, portable, and runs on a persistent disk in production.
+*   **PDF Magic**: Powered by `html2pdf.js`. It takes the HTML/CSS preview you see on screen and converts it into a high-quality PDF directly in the browser.
 
 ---
 
-## Features
+## Pro Features (Admin)
 
-- **Tax Invoices + Payment Orders** — both document types supported, switchable from the same form
-- **Live preview** — updates as you type, no save button needed
-- **Document history** — sortable by date or amount, filterable by type, with read-only viewing for past docs
-- **Auto-save** — form data persists in localStorage, so a refresh won't wipe your work
-- **GST compliance** — HSN codes, CGST/SGST breakdowns, Indian currency formatting
+I've added a secure **Data Explorer** so you can see exactly what's happening in your database without needing a SQL client.
+*   **URL**: `/api/admin/view-data`
+*   **Safety**: Password-protected and includes a "Nuclear Reset" button if you ever need to clear all data and start fresh.
 
 ---
 
-## Known Issues
+## Roadmap
 
-- **External images**: `html2canvas` can choke on high-res images from external URLs, especially if CORS is an issue. Images may render slowly or not at all.
-- **Long tables**: Multi-page tables sometimes need a nudge with `page-break-inside: avoid` in CSS to render cleanly across pages. Works fine for most typical invoices.
+DocuForge is always evolving. Here's what I'm thinking of adding next:
+- **Email Integration**: Send PDFs directly to clients with one click.
+- **Supabase Migration**: Moving to a cloud database for even better reliability.
+- **Custom Branding**: Letting users upload their own logos for the invoice header.
 
----
-
-## What's Missing (Roadmap-ish)
-
-These didn't make the cut for now, but they're the obvious next steps:
-
-- **Cloud PDF storage** — Right now PDFs are generated on the fly and not stored. Hooking up S3 or GCS would let you share persistent links.
-- **User roles** — Admin/Staff separation for teams with multiple people generating docs.
-- **Email delivery** — Send the PDF directly from the app via SMTP or SendGrid.
-- **More templates** — A template gallery would open it up considerably.
+*Built with ❤️ by a developer who just wanted a better way to bill.*
