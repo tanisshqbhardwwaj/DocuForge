@@ -68,6 +68,9 @@ db.exec(`
     bank_account TEXT DEFAULT '',
     bank_ifsc TEXT DEFAULT '',
     bank_branch TEXT DEFAULT '',
+    payment_status TEXT DEFAULT 'unpaid',
+    payment_method TEXT DEFAULT '',
+    transaction_id TEXT DEFAULT '',
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
@@ -84,6 +87,9 @@ const newColumns = [
   ['documents', 'bank_account', "TEXT DEFAULT ''"],
   ['documents', 'bank_ifsc', "TEXT DEFAULT ''"],
   ['documents', 'bank_branch', "TEXT DEFAULT ''"],
+  ['documents', 'payment_status', "TEXT DEFAULT 'unpaid'"],
+  ['documents', 'payment_method', "TEXT DEFAULT ''"],
+  ['documents', 'transaction_id', "TEXT DEFAULT ''"],
 ];
 
 for (const [table, col, type] of newColumns) {

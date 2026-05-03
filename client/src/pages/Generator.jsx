@@ -33,6 +33,9 @@ export default function Generator() {
     notes: '',
     terms: 'Please pay the invoice before the due date.',
     bank_name: '', bank_account: '', bank_ifsc: '', bank_branch: '',
+    payment_status: 'unpaid',
+    payment_method: '',
+    transaction_id: '',
   })
 
   // Restore draft from localStorage if available

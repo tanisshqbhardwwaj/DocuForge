@@ -25,6 +25,11 @@ class DocumentService {
   static deleteDocument(id, userId) {
     return DocumentRepository.delete(id, userId);
   }
+
+  static updatePayment(id, userId, paymentData) {
+    const { status, method, transaction_id } = paymentData;
+    return DocumentRepository.updatePaymentStatus(id, userId, status, method, transaction_id);
+  }
 }
 
 module.exports = DocumentService;

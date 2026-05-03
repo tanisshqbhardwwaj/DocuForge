@@ -46,6 +46,26 @@ export default function History() {
     }
   }
 
+  const handleUpdatePayment = async (id, paymentData) => {
+    try {
+      const res = await authFetch(`/api/documents/${id}/payment`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentData)
+      })
+      if (!res.ok) throw new Error('Failed to update payment status')
+      
+      setDocuments(prev => prev.map(d => 
+        d.id === id ? { ...d, ...paymentData, payment_status: paymentData.status } : d
+      ))
+      if (viewDoc && viewDoc.id === id) {
+        setViewDoc(prev => ({ ...prev, ...paymentData, payment_status: paymentData.status }))
+      }
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0)
   }
@@ -121,9 +141,9 @@ export default function History() {
 
   // Stats
   const totalDocs = documents.length
-  const totalRevenue = documents.reduce((sum, d) => sum + (d.total || 0), 0)
-  const invoiceCount = documents.filter(d => d.doc_type === 'invoice').length
-  const poCount = documents.filter(d => d.doc_type === 'purchase_order').length
+  const totalValue = documents.reduce((sum, d) => sum + (d.total || 0), 0)
+  const paidValue = documents.filter(d => d.payment_status === 'paid').reduce((sum, d) => sum + (d.total || 0), 0)
+  const unpaidCount = documents.filter(d => d.payment_status !== 'paid').length
 
   if (loading) {
     return (
@@ -160,22 +180,22 @@ export default function History() {
         <div className="stat-card" id="stat-revenue">
           <div className="stat-icon green"><i className="fas fa-rupee-sign"></i></div>
           <div className="stat-info">
-            <span className="stat-value">{formatCurrency(totalRevenue)}</span>
-            <span className="stat-label">Total Value</span>
+            <span className="stat-value">{formatCurrency(totalValue)}</span>
+            <span className="stat-label">Total Document Value</span>
           </div>
         </div>
-        <div className="stat-card" id="stat-invoices">
-          <div className="stat-icon blue"><i className="fas fa-file-invoice-dollar"></i></div>
+        <div className="stat-card" id="stat-paid">
+          <div className="stat-icon blue"><i className="fas fa-check-circle"></i></div>
           <div className="stat-info">
-            <span className="stat-value">{invoiceCount}</span>
-            <span className="stat-label">Invoices</span>
+            <span className="stat-value">{formatCurrency(paidValue)}</span>
+            <span className="stat-label">Total Paid</span>
           </div>
         </div>
-        <div className="stat-card" id="stat-pos">
-          <div className="stat-icon orange"><i className="fas fa-shopping-cart"></i></div>
+        <div className="stat-card" id="stat-unpaid">
+          <div className="stat-icon orange"><i className="fas fa-clock"></i></div>
           <div className="stat-info">
-            <span className="stat-value">{poCount}</span>
-            <span className="stat-label">Purchase Orders</span>
+            <span className="stat-value">{unpaidCount}</span>
+            <span className="stat-label">Unpaid Bills</span>
           </div>
         </div>
       </div>
@@ -198,14 +218,14 @@ export default function History() {
                 onClick={() => setFilterType('invoice')}
                 id="filter-invoices"
               >
-                Invoices <span className="pill-count">{invoiceCount}</span>
+                Invoices
               </button>
               <button
                 className={`filter-pill ${filterType === 'purchase_order' ? 'active' : ''}`}
                 onClick={() => setFilterType('purchase_order')}
                 id="filter-pos"
               >
-                POs <span className="pill-count">{poCount}</span>
+                POs
               </button>
             </div>
           </div>
@@ -262,7 +282,7 @@ export default function History() {
                 <th className="sortable-th" onClick={() => toggleSort('date')} id="th-sort-date">
                   Date {sortIcon('date')}
                 </th>
-                <th>Items</th>
+                <th>Payment</th>
                 <th className="sortable-th" onClick={() => toggleSort('total')} id="th-sort-total">
                   Total {sortIcon('total')}
                 </th>
@@ -287,7 +307,11 @@ export default function History() {
                   </td>
                   <td className="client-cell">{doc.client_name || '—'}</td>
                   <td>{formatDate(doc.date)}</td>
-                  <td>{doc.items?.length || 0} items</td>
+                  <td>
+                    <span className={`badge ${doc.payment_status === 'paid' ? 'badge-green' : 'badge-gray'}`}>
+                      {doc.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
+                    </span>
+                  </td>
                   <td className="total-cell">{formatCurrency(doc.total)}</td>
                   <td>
                     <button
@@ -324,18 +348,85 @@ export default function History() {
                 <span className={`badge ${viewDoc.doc_type === 'invoice' ? 'badge-blue' : 'badge-orange'}`}>
                   {viewDoc.doc_type === 'invoice' ? 'Invoice' : 'Purchase Order'}
                 </span>
+                <span className={`badge ${viewDoc.payment_status === 'paid' ? 'badge-green' : 'badge-gray'}`}>
+                  {viewDoc.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
+                </span>
               </div>
               <button className="btn-icon modal-close" onClick={() => setViewDoc(null)} id="btn-close-modal">
                 <i className="fas fa-times"></i>
               </button>
             </div>
             <div className="modal-body">
-              <DocumentPreview
-                data={buildPreviewData(viewDoc)}
-                subtotal={viewDoc.subtotal || 0}
-                taxAmount={viewDoc.tax_amount || 0}
-                total={viewDoc.total || 0}
-              />
+              <div className="modal-sidebar">
+                <div className="sidebar-section">
+                  <h3>Payment Status</h3>
+                  <div className="payment-control">
+                    <select 
+                      value={viewDoc.payment_status || 'unpaid'} 
+                      onChange={(e) => handleUpdatePayment(viewDoc.id, { 
+                        status: e.target.value,
+                        method: viewDoc.payment_method,
+                        transaction_id: viewDoc.transaction_id
+                      })}
+                      className="form-input"
+                    >
+                      <option value="unpaid">Unpaid</option>
+                      <option value="paid">Paid</option>
+                    </select>
+                  </div>
+                  
+                  {viewDoc.payment_status === 'paid' && (
+                    <div className="payment-details-edit">
+                      <div className="form-group">
+                        <label>Method</label>
+                        <select 
+                          value={viewDoc.payment_method || ''} 
+                          onChange={(e) => handleUpdatePayment(viewDoc.id, { 
+                            status: 'paid',
+                            method: e.target.value,
+                            transaction_id: viewDoc.transaction_id
+                          })}
+                          className="form-input"
+                        >
+                          <option value="">Select</option>
+                          <option value="Cash">Cash</option>
+                          <option value="Online">Online</option>
+                          <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                      </div>
+                      {viewDoc.payment_method === 'Online' && (
+                        <div className="form-group">
+                          <label>Transaction ID</label>
+                          <input 
+                            type="text" 
+                            className="form-input"
+                            value={viewDoc.transaction_id || ''}
+                            onChange={(e) => handleUpdatePayment(viewDoc.id, { 
+                              status: 'paid',
+                              method: 'Online',
+                              transaction_id: e.target.value
+                            })}
+                            onBlur={(e) => handleUpdatePayment(viewDoc.id, { 
+                              status: 'paid',
+                              method: 'Online',
+                              transaction_id: e.target.value
+                            })}
+                            placeholder="Enter TXN ID"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-main">
+                <DocumentPreview
+                  data={buildPreviewData(viewDoc)}
+                  subtotal={viewDoc.subtotal || 0}
+                  taxAmount={viewDoc.tax_amount || 0}
+                  total={viewDoc.total || 0}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -343,3 +434,4 @@ export default function History() {
     </div>
   )
 }
+

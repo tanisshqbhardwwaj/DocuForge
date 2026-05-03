@@ -295,6 +295,46 @@ export default function DocumentForm({
         </div>
       </section>
 
+      {/* Payment Tracking */}
+      <section className="form-section glass-card">
+        <h2 className="section-title"><i className="fas fa-credit-card"></i> Payment Status</h2>
+        <div className="form-grid cols-2">
+          <div className="form-group">
+            <label htmlFor="input-payment-status">Status</label>
+            <select id="input-payment-status" className="form-input"
+              value={formData.payment_status} onChange={e => onChange('payment_status', e.target.value)}>
+              <option value="unpaid">Unpaid</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+          
+          {formData.payment_status === 'paid' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="input-payment-method">Payment Method</label>
+                <select id="input-payment-method" className="form-input"
+                  value={formData.payment_method} onChange={e => onChange('payment_method', e.target.value)}>
+                  <option value="">Select Method</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Online">Online (UPI/Card)</option>
+                  <option value="Cheque">Cheque</option>
+                </select>
+              </div>
+
+              {formData.payment_method === 'Online' && (
+                <div className="form-group">
+                  <label htmlFor="input-tx-id">Transaction ID</label>
+                  <input id="input-tx-id" type="text" className="form-input"
+                    value={formData.transaction_id} onChange={e => onChange('transaction_id', e.target.value)}
+                    placeholder="Enter TXN ID or Ref No." />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+
       {/* Notes & Terms */}
       <section className="form-section glass-card">
         <h2 className="section-title"><i className="fas fa-sticky-note"></i> Notes &amp; Terms</h2>

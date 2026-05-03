@@ -10,6 +10,7 @@ router.get('/', DocumentController.getAll);
 router.get('/:id', DocumentController.getOne);
 router.post('/', DocumentController.create);
 router.delete('/:id', DocumentController.delete);
+router.patch('/:id/payment', DocumentController.updatePayment);
 
 module.exports = router;
 

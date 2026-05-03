@@ -38,6 +38,15 @@ class DocumentController {
       res.status(500).json({ error: err.message });
     }
   }
+
+  static updatePayment(req, res) {
+    try {
+      DocumentService.updatePayment(req.params.id, req.userId, req.body);
+      res.json({ message: 'Payment status updated' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
 }
 
 module.exports = DocumentController;

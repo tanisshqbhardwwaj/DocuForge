@@ -10,8 +10,9 @@ class DocumentRepository {
         client_name, client_address, client_email, client_phone, client_gstin,
         place_of_supply, payment_terms, items, subtotal, tax_rate,
         tax_amount, total, discount, notes, terms,
-        bank_name, bank_account, bank_ifsc, bank_branch
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        bank_name, bank_account, bank_ifsc, bank_branch,
+        payment_status, payment_method, transaction_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       d.user_id, 
       d.doc_type || 'invoice', 
@@ -42,7 +43,10 @@ class DocumentRepository {
       d.bank_name || '', 
       d.bank_account || '', 
       d.bank_ifsc || '', 
-      d.bank_branch || ''
+      d.bank_branch || '',
+      d.payment_status || 'unpaid',
+      d.payment_method || '',
+      d.transaction_id || ''
     );
     return result.lastInsertRowid;
   }
@@ -57,6 +61,16 @@ class DocumentRepository {
 
   static delete(id, userId) {
     return db.prepare('DELETE FROM documents WHERE id = ? AND user_id = ?').run(id, userId);
+  }
+
+  static updatePaymentStatus(id, userId, status, method, txId) {
+    return db.prepare(`
+      UPDATE documents SET
+        payment_status = ?,
+        payment_method = ?,
+        transaction_id = ?
+      WHERE id = ? AND user_id = ?
+    `).run(status, method || '', txId || '', id, userId);
   }
 
   static findAll() {
