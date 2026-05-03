@@ -121,18 +121,6 @@ export default function Generator() {
       const element = previewRef.current
       if (!element) throw new Error('Preview not found')
 
-      // Clone the element into a full-size off-screen container
-      // This prevents html2pdf from clipping content inside scroll containers
-      const clone = element.cloneNode(true)
-      clone.style.position = 'absolute'
-      clone.style.left = '-9999px'
-      clone.style.top = '0'
-      clone.style.width = '210mm'  // A4 width
-      clone.style.overflow = 'visible'
-      clone.style.height = 'auto'
-      clone.style.maxHeight = 'none'
-      document.body.appendChild(clone)
-
       const html2pdf = (await import('html2pdf.js')).default
 
       const pdfFilename = `${formData.doc_number}.pdf`
@@ -145,19 +133,14 @@ export default function Generator() {
           scale: 2,
           useCORS: true,
           logging: false,
-          width: clone.scrollWidth,
-          height: clone.scrollHeight,
-          windowWidth: clone.scrollWidth,
+          scrollY: 0
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       }
 
       // Use outputPdf('blob') + manual download to guarantee correct filename
-      const pdfBlob = await html2pdf().set(opt).from(clone).outputPdf('blob')
-
-      // Clean up clone immediately
-      document.body.removeChild(clone)
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob')
 
       // Trigger download with the correct filename
       const url = URL.createObjectURL(pdfBlob)
@@ -178,9 +161,6 @@ export default function Generator() {
     } catch (err) {
       console.error(err)
       showToast(err.message || 'Something went wrong', 'error')
-      // Clean up clone if error
-      const leftover = document.querySelector('[style*="-9999px"]')
-      if (leftover) leftover.remove()
     } finally {
       setSaving(false)
     }
