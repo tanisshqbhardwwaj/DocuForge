@@ -5,6 +5,7 @@ import History from './pages/History'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import OrgSetup from './pages/OrgSetup'
+import WelcomeModal from './components/WelcomeModal'
 import './App.css'
 
 function ProtectedRoute({ children }) {
@@ -53,6 +54,7 @@ function AppLayout() {
 
   return (
     <>
+      <WelcomeModal user={user} />
       <nav className="navbar" id="main-navbar">
         <div className="nav-brand">
           <i className="fas fa-file-invoice"></i>
