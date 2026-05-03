@@ -359,15 +359,12 @@ export default function History() {
             <div className="modal-body">
               <div className="modal-sidebar">
                 <div className="sidebar-section">
-                  <h3>Payment Status</h3>
-                  <div className="payment-control">
+                  <h3><i className="fas fa-credit-card"></i> Payment Status</h3>
+                  <div className="form-group">
+                    <label>Status</label>
                     <select 
                       value={viewDoc.payment_status || 'unpaid'} 
-                      onChange={(e) => handleUpdatePayment(viewDoc.id, { 
-                        status: e.target.value,
-                        method: viewDoc.payment_method,
-                        transaction_id: viewDoc.transaction_id
-                      })}
+                      onChange={(e) => setViewDoc({ ...viewDoc, payment_status: e.target.value })}
                       className="form-input"
                     >
                       <option value="unpaid">Unpaid</option>
@@ -376,47 +373,45 @@ export default function History() {
                   </div>
                   
                   {viewDoc.payment_status === 'paid' && (
-                    <div className="payment-details-edit">
+                    <div className="payment-details-edit fade-in">
                       <div className="form-group">
                         <label>Method</label>
                         <select 
                           value={viewDoc.payment_method || ''} 
-                          onChange={(e) => handleUpdatePayment(viewDoc.id, { 
-                            status: 'paid',
-                            method: e.target.value,
-                            transaction_id: viewDoc.transaction_id
-                          })}
+                          onChange={(e) => setViewDoc({ ...viewDoc, payment_method: e.target.value })}
                           className="form-input"
                         >
-                          <option value="">Select</option>
+                          <option value="">Select Method</option>
                           <option value="Cash">Cash</option>
-                          <option value="Online">Online</option>
+                          <option value="Online">Online (UPI/Card)</option>
                           <option value="Bank Transfer">Bank Transfer</option>
+                          <option value="Cheque">Cheque</option>
                         </select>
                       </div>
-                      {viewDoc.payment_method === 'Online' && (
-                        <div className="form-group">
-                          <label>Transaction ID</label>
-                          <input 
-                            type="text" 
-                            className="form-input"
-                            value={viewDoc.transaction_id || ''}
-                            onChange={(e) => handleUpdatePayment(viewDoc.id, { 
-                              status: 'paid',
-                              method: 'Online',
-                              transaction_id: e.target.value
-                            })}
-                            onBlur={(e) => handleUpdatePayment(viewDoc.id, { 
-                              status: 'paid',
-                              method: 'Online',
-                              transaction_id: e.target.value
-                            })}
-                            placeholder="Enter TXN ID"
-                          />
-                        </div>
-                      )}
+                      <div className="form-group">
+                        <label>Transaction ID / Ref</label>
+                        <input 
+                          type="text" 
+                          className="form-input"
+                          value={viewDoc.transaction_id || ''}
+                          onChange={(e) => setViewDoc({ ...viewDoc, transaction_id: e.target.value })}
+                          placeholder="TXN ID"
+                        />
+                      </div>
                     </div>
                   )}
+                  
+                  <button 
+                    className="btn btn-primary btn-full" 
+                    style={{ marginTop: '1rem', width: '100%' }}
+                    onClick={() => handleUpdatePayment(viewDoc.id, {
+                      status: viewDoc.payment_status,
+                      method: viewDoc.payment_method,
+                      transaction_id: viewDoc.transaction_id
+                    })}
+                  >
+                    Update Payment
+                  </button>
                 </div>
               </div>
               <div className="modal-main">
