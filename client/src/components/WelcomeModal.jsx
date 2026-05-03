@@ -11,10 +11,10 @@ export default function WelcomeModal({ user, onStartTour }) {
       localStorage.setItem('df_visited', 'true')
       setIsOpen(true)
     } else {
-      const sessionSeen = sessionStorage.getItem('df_session_seen')
+      const sessionSeen = sessionStorage.getItem('df_session_v2')
       if (!sessionSeen) {
         setIsFirstVisit(false)
-        sessionStorage.setItem('df_session_seen', 'true')
+        sessionStorage.setItem('df_session_v2', 'true')
         setIsOpen(true)
       }
     }
@@ -60,7 +60,7 @@ export default function WelcomeModal({ user, onStartTour }) {
 
         <div className="welcome-actions">
           <button className="btn btn-primary btn-full" onClick={handlePrimaryClick}>
-            {isFirstVisit ? 'Show Me Around' : 'Get Started'}
+            {isFirstVisit ? 'Show Me Around' : 'Get Started again'}
           </button>
           
           {isFirstVisit && (
