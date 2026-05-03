@@ -93,3 +93,5 @@ for (const [table, col, type] of newColumns) {
     // Column already exists — ignore
   }
 }
+
+module.exports = db;
