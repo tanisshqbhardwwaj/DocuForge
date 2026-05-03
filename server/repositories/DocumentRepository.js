@@ -13,12 +13,36 @@ class DocumentRepository {
         bank_name, bank_account, bank_ifsc, bank_branch
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      d.user_id, d.doc_type, d.doc_number, d.title, d.date, d.due_date,
-      d.sender_name, d.sender_address, d.sender_email, d.sender_phone, d.sender_gstin,
-      d.client_name, d.client_address, d.client_email, d.client_phone, d.client_gstin,
-      d.place_of_supply, d.payment_terms, JSON.stringify(d.items || []),
-      d.subtotal, d.tax_rate, d.tax_amount, d.total, d.discount, d.notes, d.terms,
-      d.bank_name, d.bank_account, d.bank_ifsc, d.bank_branch
+      d.user_id, 
+      d.doc_type || 'invoice', 
+      d.doc_number || '', 
+      d.title || 'INVOICE', 
+      d.date || '', 
+      d.due_date || '',
+      d.sender_name || '', 
+      d.sender_address || '', 
+      d.sender_email || '', 
+      d.sender_phone || '', 
+      d.sender_gstin || '',
+      d.client_name || '', 
+      d.client_address || '', 
+      d.client_email || '', 
+      d.client_phone || '', 
+      d.client_gstin || '',
+      d.place_of_supply || '', 
+      d.payment_terms || 'Net 30', 
+      JSON.stringify(d.items || []),
+      d.subtotal || 0, 
+      d.tax_rate || 0, 
+      d.tax_amount || 0, 
+      d.total || 0, 
+      d.discount || 0, 
+      d.notes || '', 
+      d.terms || '',
+      d.bank_name || '', 
+      d.bank_account || '', 
+      d.bank_ifsc || '', 
+      d.bank_branch || ''
     );
     return result.lastInsertRowid;
   }
