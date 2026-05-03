@@ -9,5 +9,7 @@ services:
         value: production
       - key: PORT
         value: 10000
-    # Note: Free tier on Render has ephemeral disk, meaning SQLite database resets on restart.
-    # To keep data persistent, a paid disk is required, or use a hosted DB like Turso/PostgreSQL.
+    disk:
+      name: docuforge-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
