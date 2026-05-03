@@ -6,6 +6,7 @@ class DocumentController {
       const doc = DocumentService.createDocument(req.userId, req.body);
       res.status(201).json(doc);
     } catch (err) {
+      console.error('DOCUMENT CREATE ERROR:', err);
       res.status(500).json({ error: err.message });
     }
   }
