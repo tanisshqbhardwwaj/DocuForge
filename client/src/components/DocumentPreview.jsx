@@ -48,6 +48,7 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
 
   return (
     <div className="tax-invoice" ref={ref} id="document-preview">
+      {data.payment_status === 'paid' && <div className="paid-stamp">PAID</div>}
       {/* Header */}
       <div className="ti-header">
         <div className="ti-company">
