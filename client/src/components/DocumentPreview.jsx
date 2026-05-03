@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 
-const DocumentPreview = forwardRef(({ data, subtotal, taxAmount, total }, ref) => {
+const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, ref) => {
   const fmt = (val) =>
     new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val || 0)
 
@@ -67,28 +67,32 @@ const DocumentPreview = forwardRef(({ data, subtotal, taxAmount, total }, ref) =
       </div>
 
       {/* Meta Grid */}
-      <div className="ti-meta-grid">
-        <div className="ti-meta-row">
-          <div className="ti-meta-cell">
-            <span className="ti-label">Invoice Date</span>
-            <span className="ti-value">{formatDate(data.date)}</span>
-          </div>
-          <div className="ti-meta-cell">
-            <span className="ti-label">Place of Supply</span>
-            <span className="ti-value">{data.place_of_supply || '—'}</span>
-          </div>
-        </div>
         <div className="ti-meta-row">
           <div className="ti-meta-cell">
             <span className="ti-label">Due Date</span>
             <span className="ti-value">{formatDate(data.due_date)}</span>
           </div>
-          <div className="ti-meta-cell">
-            <span className="ti-label">Terms</span>
-            <span className="ti-value">{data.payment_terms || 'Net 30'}</span>
-          </div>
+          {user?.org_gst_registered ? (
+            <div className="ti-meta-cell">
+              <span className="ti-label">Place of Supply</span>
+              <span className="ti-value">{data.place_of_supply || '—'}</span>
+            </div>
+          ) : (
+            <div className="ti-meta-cell">
+              <span className="ti-label">Terms</span>
+              <span className="ti-value">{data.payment_terms || 'Net 30'}</span>
+            </div>
+          )}
         </div>
-      </div>
+        {user?.org_gst_registered && (
+          <div className="ti-meta-row">
+            <div className="ti-meta-cell">
+              <span className="ti-label">Terms</span>
+              <span className="ti-value">{data.payment_terms || 'Net 30'}</span>
+            </div>
+            <div className="ti-meta-cell"></div>
+          </div>
+        )}
 
       {/* Bill To / Ship To */}
       <div className="ti-parties">
@@ -112,8 +116,8 @@ const DocumentPreview = forwardRef(({ data, subtotal, taxAmount, total }, ref) =
         <thead>
           <tr>
             <th style={{width:'5%'}}>#</th>
-            <th style={{width:'35%'}}>Item &amp; Description</th>
-            <th style={{width:'15%'}}>HSN/SAC</th>
+            <th style={{width: user?.org_gst_registered ? '35%' : '50%'}}>Item &amp; Description</th>
+            {user?.org_gst_registered && <th style={{width:'15%'}}>HSN/SAC</th>}
             <th style={{width:'10%'}}>Qty</th>
             <th style={{width:'15%'}}>Rate</th>
             <th style={{width:'20%'}}>Amount</th>
@@ -125,16 +129,16 @@ const DocumentPreview = forwardRef(({ data, subtotal, taxAmount, total }, ref) =
               <td>{i + 1}</td>
               <td>
                 <strong>{item.description || '—'}</strong>
-                {item.hsn && <div className="ti-hsn-inline">{item.hsn}</div>}
+                {user?.org_gst_registered && item.hsn && <div className="ti-hsn-inline">{item.hsn}</div>}
               </td>
-              <td>{item.hsn || '—'}</td>
+              {user?.org_gst_registered && <td>{item.hsn || '—'}</td>}
               <td>{item.quantity}</td>
               <td>₹{fmt(item.unit_price)}</td>
               <td>₹{fmt(item.quantity * item.unit_price)}</td>
             </tr>
           ))}
           {data.items.length === 0 && (
-            <tr><td colSpan="6" style={{textAlign:'center', color:'#94a3b8'}}>No items</td></tr>
+            <tr><td colSpan="6" style={{textAlign:'center', color:'#000000'}}>No items</td></tr>
           )}
         </tbody>
       </table>
@@ -173,16 +177,25 @@ const DocumentPreview = forwardRef(({ data, subtotal, taxAmount, total }, ref) =
             </div>
           )}
           {data.tax_rate > 0 && (
-            <>
-              <div className="ti-total-row">
-                <span>CGST ({halfTax}%)</span>
-                <span>₹{fmt(cgst)}</span>
-              </div>
-              <div className="ti-total-row">
-                <span>SGST ({halfTax}%)</span>
-                <span>₹{fmt(sgst)}</span>
-              </div>
-            </>
+            user?.org_gst_registered ? (
+              <>
+                <div className="ti-total-row">
+                  <span>CGST ({halfTax}%)</span>
+                  <span>₹{fmt(cgst)}</span>
+                </div>
+                <div className="ti-total-row">
+                  <span>SGST ({halfTax}%)</span>
+                  <span>₹{fmt(sgst)}</span>
+                </div>
+              </>
+            ) : (
+              data.show_tax_field && (
+                <div className="ti-total-row">
+                  <span>Tax ({data.tax_rate}%)</span>
+                  <span>₹{fmt(subtotal * data.tax_rate / 100)}</span>
+                </div>
+              )
+            )
           )}
           <div className="ti-total-row ti-grand-total">
             <span>Total</span>

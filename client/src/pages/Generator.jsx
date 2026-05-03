@@ -11,7 +11,7 @@ export default function Generator() {
 
   // Auto-fill sender details from organization profile
   const defaultState = () => ({
-    title: 'TAX INVOICE',
+    title: user?.org_gst_registered ? 'TAX INVOICE' : 'INVOICE',
     doc_number: `INV-${String(Math.floor(Math.random() * 9000) + 1000)}`,
     date: new Date().toISOString().split('T')[0],
     due_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
@@ -29,6 +29,7 @@ export default function Generator() {
     payment_terms: 'Net 30',
     items: [{ description: '', quantity: 1, unit_price: 0, hsn: '' }],
     tax_rate: user?.org_gst_registered ? 18 : 0,
+    show_tax_field: true,
     discount: 0,
     notes: '',
     terms: 'Please pay the invoice before the due date.',
@@ -215,6 +216,7 @@ export default function Generator() {
       <div className="split-pane">
         <div className="pane-left" id="document-form">
           <DocumentForm
+            user={user}
             formData={formData}
             onChange={handleChange}
             onItemChange={handleItemChange}
@@ -231,6 +233,7 @@ export default function Generator() {
               <i className="fas fa-eye"></i> Live Preview
             </div>
             <DocumentPreview
+              user={user}
               ref={previewRef}
               data={formData}
               subtotal={subtotal}

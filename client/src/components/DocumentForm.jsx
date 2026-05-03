@@ -1,5 +1,5 @@
 export default function DocumentForm({
-  formData, onChange, onItemChange, onAddItem, onRemoveItem,
+  user, formData, onChange, onItemChange, onAddItem, onRemoveItem,
   subtotal, taxAmount, total
 }) {
   const fmt = (val) =>
@@ -15,7 +15,7 @@ export default function DocumentForm({
             <label htmlFor="input-title">Document Title</label>
             <select id="input-title" value={formData.title}
               onChange={e => onChange('title', e.target.value)} className="form-input">
-              <option value="TAX INVOICE">TAX INVOICE</option>
+              {user?.org_gst_registered && <option value="TAX INVOICE">TAX INVOICE</option>}
               <option value="INVOICE">INVOICE</option>
               <option value="PURCHASE ORDER">PURCHASE ORDER</option>
               <option value="PROFORMA INVOICE">PROFORMA INVOICE</option>
@@ -38,12 +38,14 @@ export default function DocumentForm({
             <input id="input-due-date" type="date" className="form-input input-readonly"
               value={formData.due_date} readOnly />
           </div>
-          <div className="form-group">
-            <label htmlFor="input-place">Place of Supply</label>
-            <input id="input-place" type="text" className="form-input"
-              value={formData.place_of_supply || ''} onChange={e => onChange('place_of_supply', e.target.value)}
-              placeholder="e.g. Tamil Nadu" />
-          </div>
+          {user?.org_gst_registered && (
+            <div className="form-group">
+              <label htmlFor="input-place">Place of Supply</label>
+              <input id="input-place" type="text" className="form-input"
+                value={formData.place_of_supply || ''} onChange={e => onChange('place_of_supply', e.target.value)}
+                placeholder="e.g. Tamil Nadu" />
+            </div>
+          )}
           <div className="form-group">
             <label htmlFor="input-terms-type">Payment Terms</label>
             <select id="input-terms-type" className="form-input"
@@ -87,12 +89,14 @@ export default function DocumentForm({
               value={formData.sender_phone} onChange={e => onChange('sender_phone', e.target.value)}
               placeholder="+91 98765 43210" />
           </div>
-          <div className="form-group full-width">
-            <label htmlFor="input-sender-gstin">GSTIN</label>
-            <input id="input-sender-gstin" type="text" className="form-input"
-              value={formData.sender_gstin || ''} onChange={e => onChange('sender_gstin', e.target.value)}
-              placeholder="22AAAAA0000A1Z5" maxLength={15} />
-          </div>
+          {user?.org_gst_registered && (
+            <div className="form-group full-width">
+              <label htmlFor="input-sender-gstin">GSTIN</label>
+              <input id="input-sender-gstin" type="text" className="form-input"
+                value={formData.sender_gstin || ''} onChange={e => onChange('sender_gstin', e.target.value)}
+                placeholder="22AAAAA0000A1Z5" maxLength={15} />
+            </div>
+          )}
         </div>
       </section>
 
@@ -124,12 +128,14 @@ export default function DocumentForm({
               value={formData.client_phone} onChange={e => onChange('client_phone', e.target.value)}
               placeholder="+91 12345 67890" />
           </div>
-          <div className="form-group full-width">
-            <label htmlFor="input-client-gstin">Client GSTIN</label>
-            <input id="input-client-gstin" type="text" className="form-input"
-              value={formData.client_gstin || ''} onChange={e => onChange('client_gstin', e.target.value)}
-              placeholder="Client GSTIN (optional)" maxLength={15} />
-          </div>
+          {user?.org_gst_registered && (
+            <div className="form-group full-width">
+              <label htmlFor="input-client-gstin">Client GSTIN</label>
+              <input id="input-client-gstin" type="text" className="form-input"
+                value={formData.client_gstin || ''} onChange={e => onChange('client_gstin', e.target.value)}
+                placeholder="Client GSTIN (optional)" maxLength={15} />
+            </div>
+          )}
         </div>
       </section>
 
@@ -146,20 +152,22 @@ export default function DocumentForm({
             <div key={index} className="item-card">
               {/* Row 1: Description + HSN */}
               <div className="item-row-top">
-                <div className="form-group item-desc-wide">
+                <div className={`form-group ${user?.org_gst_registered ? 'item-desc-wide' : 'item-desc-full'}`}>
                   <label>Description</label>
                   <input type="text" className="form-input"
                     value={item.description}
                     onChange={e => onItemChange(index, 'description', e.target.value)}
                     placeholder="Item / service description" id={`item-desc-${index}`} />
                 </div>
-                <div className="form-group item-hsn-compact">
-                  <label>HSN/SAC</label>
-                  <input type="text" className="form-input"
-                    value={item.hsn || ''}
-                    onChange={e => onItemChange(index, 'hsn', e.target.value)}
-                    placeholder="e.g. 9983" id={`item-hsn-${index}`} />
-                </div>
+                {user?.org_gst_registered && (
+                  <div className="form-group item-hsn-compact">
+                    <label>HSN/SAC</label>
+                    <input type="text" className="form-input"
+                      value={item.hsn || ''}
+                      onChange={e => onItemChange(index, 'hsn', e.target.value)}
+                      placeholder="e.g. 9983" id={`item-hsn-${index}`} />
+                  </div>
+                )}
                 {formData.items.length > 1 && (
                   <button className="btn-icon btn-remove item-delete" onClick={() => onRemoveItem(index)}
                     title="Remove item" id={`btn-remove-${index}`}>
@@ -198,17 +206,38 @@ export default function DocumentForm({
         <h2 className="section-title"><i className="fas fa-calculator"></i> Totals</h2>
         <div className="form-grid cols-2">
           <div className="form-group">
-            <label htmlFor="input-tax-rate">GST Rate (%)</label>
+            <label htmlFor="input-tax-rate">{user?.org_gst_registered ? 'GST Rate (%)' : 'Tax Rate (%)'}</label>
             <select id="input-tax-rate" className="form-input"
               value={formData.tax_rate}
               onChange={e => onChange('tax_rate', parseFloat(e.target.value) || 0)}>
-              <option value="0">0% (No GST)</option>
-              <option value="5">5% (2.5% CGST + 2.5% SGST)</option>
-              <option value="12">12% (6% CGST + 6% SGST)</option>
-              <option value="18">18% (9% CGST + 9% SGST)</option>
-              <option value="28">28% (14% CGST + 14% SGST)</option>
+              <option value="0">0% {user?.org_gst_registered ? '(No GST)' : ''}</option>
+              {user?.org_gst_registered ? (
+                <>
+                  <option value="5">5% (2.5% CGST + 2.5% SGST)</option>
+                  <option value="12">12% (6% CGST + 6% SGST)</option>
+                  <option value="18">18% (9% CGST + 9% SGST)</option>
+                  <option value="28">28% (14% CGST + 14% SGST)</option>
+                </>
+              ) : (
+                <>
+                  <option value="5">5%</option>
+                  <option value="10">10%</option>
+                  <option value="12">12%</option>
+                  <option value="15">15%</option>
+                  <option value="18">18%</option>
+                  <option value="20">20%</option>
+                </>
+              )}
             </select>
           </div>
+          {!user?.org_gst_registered && (
+            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px' }}>
+              <label style={{ margin: 0 }}>Show Tax on Invoice?</label>
+              <input type="checkbox" checked={formData.show_tax_field} 
+                onChange={e => onChange('show_tax_field', e.target.checked)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
+            </div>
+          )}
           <div className="form-group">
             <label htmlFor="input-discount">Discount (%)</label>
             <input id="input-discount" type="number" className="form-input" min="0" max="100" step="0.5"
@@ -222,10 +251,14 @@ export default function DocumentForm({
             <div className="total-row"><span>Discount ({formData.discount}%)</span><span>-{fmt(subtotal * formData.discount / 100)}</span></div>
           )}
           {formData.tax_rate > 0 && (
-            <>
-              <div className="total-row"><span>CGST ({formData.tax_rate / 2}%)</span><span>{fmt(subtotal * formData.tax_rate / 200)}</span></div>
-              <div className="total-row"><span>SGST ({formData.tax_rate / 2}%)</span><span>{fmt(subtotal * formData.tax_rate / 200)}</span></div>
-            </>
+            user?.org_gst_registered ? (
+              <>
+                <div className="total-row"><span>CGST ({formData.tax_rate / 2}%)</span><span>{fmt(subtotal * formData.tax_rate / 200)}</span></div>
+                <div className="total-row"><span>SGST ({formData.tax_rate / 2}%)</span><span>{fmt(subtotal * formData.tax_rate / 200)}</span></div>
+              </>
+            ) : (
+              formData.show_tax_field && <div className="total-row"><span>Tax ({formData.tax_rate}%)</span><span>{fmt(subtotal * formData.tax_rate / 100)}</span></div>
+            )
           )}
           <div className="total-row total-final"><span>Total</span><span>{fmt(total)}</span></div>
         </div>

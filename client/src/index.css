@@ -476,6 +476,10 @@ textarea.form-input {
 }
 
 .item-desc-wide {
+  flex: 3;
+}
+
+.item-desc-full {
   flex: 1;
 }
 
