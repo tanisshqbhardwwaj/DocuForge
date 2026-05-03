@@ -48,7 +48,6 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
 
   return (
     <div className="tax-invoice" ref={ref} id="document-preview">
-      {data.payment_status === 'paid' && <div className="paid-stamp">PAID</div>}
       {/* Header */}
       <div className="ti-header">
         <div className="ti-company">
@@ -208,6 +207,12 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
             <span>Balance Due</span>
             <span>₹{fmt(data.payment_status === 'paid' ? 0 : total)}</span>
           </div>
+          {data.payment_status === 'paid' && (
+            <div className="ti-total-row" style={{ color: '#10b981', fontWeight: '900', fontSize: '0.85rem', paddingTop: '8px', borderTop: '1px dashed #cbd5e1', marginTop: '4px' }}>
+              <span>PAYMENT STATUS</span>
+              <span>PAID</span>
+            </div>
+          )}
         </div>
       </div>
 
