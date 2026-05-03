@@ -56,6 +56,7 @@ export default function DocumentForm({
               <option>Net 45</option>
               <option>Net 60</option>
               <option>Due on Receipt</option>
+              <option>No Due</option>
             </select>
           </div>
         </div>
@@ -302,7 +303,16 @@ export default function DocumentForm({
           <div className="form-group">
             <label htmlFor="input-payment-status">Status</label>
             <select id="input-payment-status" className="form-input"
-              value={formData.payment_status} onChange={e => onChange('payment_status', e.target.value)}>
+              value={formData.payment_status} 
+              onChange={e => {
+                const newStatus = e.target.value;
+                onChange('payment_status', newStatus);
+                if (newStatus === 'paid') {
+                  onChange('payment_terms', 'No Due');
+                } else {
+                  onChange('payment_terms', 'Net 30');
+                }
+              }}>
               <option value="unpaid">Unpaid</option>
               <option value="paid">Paid</option>
             </select>
