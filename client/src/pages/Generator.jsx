@@ -36,6 +36,12 @@ export default function Generator() {
     payment_status: 'unpaid',
     payment_method: '',
     transaction_id: '',
+    po_number: '',
+    po_date: '',
+    shipping_date: '',
+    transport_mode: '',
+    transport_name: '',
+    sales_person: '',
   })
 
   // Restore draft from localStorage if available

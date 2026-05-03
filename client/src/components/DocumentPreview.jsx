@@ -69,32 +69,58 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
       </div>
 
       {/* Meta Grid */}
+      <div className="ti-meta-grid">
+        <div className="ti-meta-row">
+          <div className="ti-meta-cell">
+            <span className="ti-label">Invoice Date</span>
+            <span className="ti-value">{formatDate(data.date)}</span>
+          </div>
+          <div className="ti-meta-cell">
+            <span className="ti-label">Shipping Date</span>
+            <span className="ti-value">{formatDate(data.shipping_date) || '—'}</span>
+          </div>
+        </div>
+        <div className="ti-meta-row">
+          <div className="ti-meta-cell">
+            <span className="ti-label">Terms</span>
+            <span className="ti-value">{data.payment_terms || 'Net 30'}</span>
+          </div>
+          <div className="ti-meta-cell">
+            <span className="ti-label">Transport Mode</span>
+            <span className="ti-value">{data.transport_mode || '—'}</span>
+          </div>
+        </div>
         <div className="ti-meta-row">
           <div className="ti-meta-cell">
             <span className="ti-label">Due Date</span>
             <span className="ti-value">{formatDate(data.due_date)}</span>
           </div>
-          {user?.org_gst_registered ? (
-            <div className="ti-meta-cell">
-              <span className="ti-label">Place of Supply</span>
-              <span className="ti-value">{data.place_of_supply || '—'}</span>
-            </div>
-          ) : (
-            <div className="ti-meta-cell">
-              <span className="ti-label">Terms</span>
-              <span className="ti-value">{data.payment_terms || 'Net 30'}</span>
-            </div>
-          )}
-        </div>
-        {user?.org_gst_registered && (
-          <div className="ti-meta-row">
-            <div className="ti-meta-cell">
-              <span className="ti-label">Terms</span>
-              <span className="ti-value">{data.payment_terms || 'Net 30'}</span>
-            </div>
-            <div className="ti-meta-cell"></div>
+          <div className="ti-meta-cell">
+            <span className="ti-label">Transport Name</span>
+            <span className="ti-value">{data.transport_name || '—'}</span>
           </div>
-        )}
+        </div>
+        <div className="ti-meta-row">
+          <div className="ti-meta-cell">
+            <span className="ti-label">P.O. Number (#)</span>
+            <span className="ti-value">{data.po_number || '—'}</span>
+          </div>
+          <div className="ti-meta-cell">
+            <span className="ti-label">Sales Person</span>
+            <span className="ti-value">{data.sales_person || '—'}</span>
+          </div>
+        </div>
+        <div className="ti-meta-row">
+          <div className="ti-meta-cell">
+            <span className="ti-label">P.O. Date</span>
+            <span className="ti-value">{formatDate(data.po_date) || '—'}</span>
+          </div>
+          <div className="ti-meta-cell">
+            <span className="ti-label">Place of Supply</span>
+            <span className="ti-value">{data.place_of_supply || '—'}</span>
+          </div>
+        </div>
+      </div>
 
       {/* Bill To / Ship To */}
       <div className="ti-parties">

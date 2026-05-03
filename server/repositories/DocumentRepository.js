@@ -11,8 +11,9 @@ class DocumentRepository {
         place_of_supply, payment_terms, items, subtotal, tax_rate,
         tax_amount, total, discount, notes, terms,
         bank_name, bank_account, bank_ifsc, bank_branch,
-        payment_status, payment_method, transaction_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        payment_status, payment_method, transaction_id,
+        po_number, po_date, shipping_date, transport_mode, transport_name, sales_person
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       d.user_id, 
       d.doc_type || 'invoice', 
@@ -46,7 +47,13 @@ class DocumentRepository {
       d.bank_branch || '',
       d.payment_status || 'unpaid',
       d.payment_method || '',
-      d.transaction_id || ''
+      d.transaction_id || '',
+      d.po_number || '',
+      d.po_date || '',
+      d.shipping_date || '',
+      d.transport_mode || '',
+      d.transport_name || '',
+      d.sales_person || ''
     );
     return result.lastInsertRowid;
   }

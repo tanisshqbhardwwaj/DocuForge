@@ -71,9 +71,27 @@ db.exec(`
     payment_status TEXT DEFAULT 'unpaid',
     payment_method TEXT DEFAULT '',
     transaction_id TEXT DEFAULT '',
+    po_number TEXT DEFAULT '',
+    po_date TEXT DEFAULT '',
+    shipping_date TEXT DEFAULT '',
+    transport_mode TEXT DEFAULT '',
+    transport_name TEXT DEFAULT '',
+    sales_person TEXT DEFAULT '',
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
+
+  // Migration for shipping/logistics fields
+  const docCols = db.prepare("PRAGMA table_info(documents)").all();
+  const hasPo = docCols.some(c => c.name === 'po_number');
+  if (!hasPo) {
+    db.prepare("ALTER TABLE documents ADD COLUMN po_number TEXT DEFAULT ''").run();
+    db.prepare("ALTER TABLE documents ADD COLUMN po_date TEXT DEFAULT ''").run();
+    db.prepare("ALTER TABLE documents ADD COLUMN shipping_date TEXT DEFAULT ''").run();
+    db.prepare("ALTER TABLE documents ADD COLUMN transport_mode TEXT DEFAULT ''").run();
+    db.prepare("ALTER TABLE documents ADD COLUMN transport_name TEXT DEFAULT ''").run();
+    db.prepare("ALTER TABLE documents ADD COLUMN sales_person TEXT DEFAULT ''").run();
+  }
 `);
 
 // Add columns to existing tables (safe — errors silently if columns already exist)
