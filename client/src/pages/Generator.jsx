@@ -91,16 +91,18 @@ export default function Generator() {
         next.due_date = calcDueDate(value, prev.payment_terms)
       }
 
-      // 2. Auto-swap prefix (INV vs PO) based on document title
+      // 2. Auto-swap prefix based on document title
       if (field === 'title') {
+        const numOnly = prev.doc_number.replace(/^(INV-|PO-|PI-|CN-)/, '')
+        
         if (value === 'PURCHASE ORDER') {
-          next.doc_number = prev.doc_number.replace(/^INV-/, 'PO-')
-          // If no prefix existed, just add it
-          if (!next.doc_number.startsWith('PO-')) next.doc_number = `PO-${next.doc_number}`
+          next.doc_number = `PO-${numOnly}`
+        } else if (value === 'PROFORMA INVOICE') {
+          next.doc_number = `PI-${numOnly}`
+        } else if (value === 'CREDIT NOTE') {
+          next.doc_number = `CN-${numOnly}`
         } else if (value.includes('INVOICE')) {
-          next.doc_number = prev.doc_number.replace(/^PO-/, 'INV-')
-          // If no prefix existed, just add it
-          if (!next.doc_number.startsWith('INV-')) next.doc_number = `INV-${next.doc_number}`
+          next.doc_number = `INV-${numOnly}`
         }
       }
       
