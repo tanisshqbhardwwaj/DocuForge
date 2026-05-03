@@ -48,6 +48,7 @@ function AppLayout() {
 
   const handleLogout = () => {
     logout()
+    localStorage.removeItem('docuforge_draft')
     navigate('/login')
   }
 

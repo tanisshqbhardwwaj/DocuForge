@@ -4,10 +4,9 @@ import DocumentPreview from '../components/DocumentPreview'
 import Toast from '../components/Toast'
 import { useAuth } from '../context/AuthContext'
 
-const STORAGE_KEY = 'docuforge_draft'
-
 export default function Generator() {
   const { user, authFetch } = useAuth()
+  const STORAGE_KEY = `docuforge_draft_${user?.id || 'anon'}`
 
   // Auto-fill sender details from organization profile
   const defaultState = () => ({
@@ -50,6 +49,14 @@ export default function Generator() {
   }
 
   const [formData, setFormData] = useState(getInitialState)
+
+  // Update form when user profile is loaded (initial load)
+  useEffect(() => {
+    if (user && !localStorage.getItem(STORAGE_KEY)) {
+      setFormData(defaultState())
+    }
+  }, [user])
+
   const [toast, setToast] = useState(null)
   const [saving, setSaving] = useState(false)
   const previewRef = useRef(null)
@@ -57,9 +64,11 @@ export default function Generator() {
   // Auto-save form data to localStorage on every change
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+      if (user) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+      }
     } catch { /* quota exceeded — ignore */ }
-  }, [formData])
+  }, [formData, STORAGE_KEY, user])
 
   // Derived calculations
   const subtotal = formData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0)
