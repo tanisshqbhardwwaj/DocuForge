@@ -14,9 +14,11 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
   }
 
   // Split GST into CGST + SGST (intra-state) or show as IGST
-  const halfTax = data.tax_rate / 2
-  const cgst = subtotal * (halfTax / 100)
-  const sgst = subtotal * (halfTax / 100)
+  const discountAmount = subtotal * ((data.discount || 0) / 100)
+  const taxableAmount = subtotal - discountAmount
+  const halfTax = (data.tax_rate || 0) / 2
+  const cgst = taxableAmount * (halfTax / 100)
+  const sgst = taxableAmount * (halfTax / 100)
 
   const isPO = data.title === 'PURCHASE ORDER'
 
@@ -173,7 +175,7 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
           {data.discount > 0 && (
             <div className="ti-total-row">
               <span>Discount ({data.discount}%)</span>
-              <span>-₹{fmt(subtotal * data.discount / 100)}</span>
+              <span>-₹{fmt(discountAmount)}</span>
             </div>
           )}
           {data.tax_rate > 0 && (
@@ -192,7 +194,7 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
               data.show_tax_field && (
                 <div className="ti-total-row">
                   <span>Tax ({data.tax_rate}%)</span>
-                  <span>₹{fmt(subtotal * data.tax_rate / 100)}</span>
+                  <span>₹{fmt(taxableAmount * data.tax_rate / 100)}</span>
                 </div>
               )
             )

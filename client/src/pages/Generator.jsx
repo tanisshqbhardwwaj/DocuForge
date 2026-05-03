@@ -75,8 +75,10 @@ export default function Generator() {
 
   // Derived calculations
   const subtotal = formData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0)
-  const taxAmount = subtotal * (formData.tax_rate / 100)
-  const total = subtotal + taxAmount
+  const discountAmount = subtotal * ((formData.discount || 0) / 100)
+  const taxableAmount = subtotal - discountAmount
+  const taxAmount = taxableAmount * ((formData.tax_rate || 0) / 100)
+  const total = taxableAmount + taxAmount
 
   // Helper: calculate due date from invoice date + payment terms
   const calcDueDate = (invoiceDate, terms) => {
