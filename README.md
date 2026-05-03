@@ -2,7 +2,7 @@
 
 I built this because generating GST-compliant invoices and payment orders felt way more painful than it should be. DocuForge lets you fill a form and get a real, properly formatted PDF out the other end — live preview included, so you're not flying blind.
 
-The UI takes heavy inspiration from Zoho's design language, with a dark-mode aesthetic baked in from the start.
+
 
 ---
 
@@ -70,4 +70,4 @@ These didn't make the cut for now, but they're the obvious next steps:
 - **Cloud PDF storage** — Right now PDFs are generated on the fly and not stored. Hooking up S3 or GCS would let you share persistent links.
 - **User roles** — Admin/Staff separation for teams with multiple people generating docs.
 - **Email delivery** — Send the PDF directly from the app via SMTP or SendGrid.
-- **More templates** — The current design is Zoho-inspired, but a template gallery would open it up considerably.
+- **More templates** — A template gallery would open it up considerably.
