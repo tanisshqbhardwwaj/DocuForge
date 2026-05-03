@@ -1,4 +1,5 @@
 const express = require('express');
+const db = require('../db');
 const UserRepository = require('../repositories/UserRepository');
 const DocumentRepository = require('../repositories/DocumentRepository');
 
@@ -46,7 +47,27 @@ router.get('/view-data', (req, res) => {
           </style>
         </head>
         <body>
-          <h1>DocuForge Database Explorer</h1>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>DocuForge Database Explorer</h1>
+            <button onclick="resetDb()" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">Reset Database</button>
+          </div>
+
+          <script>
+            async function resetDb() {
+              if (!confirm('CRITICAL WARNING: This will permanently delete ALL users and ALL documents. Are you absolutely sure?')) return;
+              const password = prompt('Enter Admin Password to confirm:');
+              if (!password) return;
+
+              const res = await fetch('/api/admin/reset-db', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+              });
+              const data = await res.json();
+              alert(data.message || data.error);
+              if (res.ok) window.location.reload();
+            }
+          </script>
           
           <h2>Users (${users.length})</h2>
           <table>
@@ -92,4 +113,26 @@ router.get('/view-data', (req, res) => {
   }
 });
 
+router.post('/reset-db', (req, res) => {
+  const { password } = req.body;
+
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    // Disable foreign keys temporarily to allow truncating
+    db.exec('PRAGMA foreign_keys = OFF;');
+    db.exec('DELETE FROM documents;');
+    db.exec('DELETE FROM users;');
+    db.exec('DELETE FROM sqlite_sequence WHERE name IN ("users", "documents");');
+    db.exec('PRAGMA foreign_keys = ON;');
+
+    res.json({ message: 'Database reset successfully. All users and documents have been removed.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
+
