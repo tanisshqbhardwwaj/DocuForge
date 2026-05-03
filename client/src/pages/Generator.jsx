@@ -85,7 +85,7 @@ export default function Generator() {
     const base = new Date(invoiceDate)
     if (isNaN(base.getTime())) return ''
     let days = 30
-    if (terms === 'Due on Receipt') days = 0
+    if (terms === 'Due on Receipt' || terms === 'No Due') days = 0
     else {
       const match = terms?.match(/Net\s+(\d+)/)
       if (match) days = parseInt(match[1], 10)

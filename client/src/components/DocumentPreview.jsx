@@ -205,7 +205,7 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
           </div>
           <div className="ti-total-row ti-balance">
             <span>Balance Due</span>
-            <span>₹{fmt(total)}</span>
+            <span>₹{fmt(data.payment_status === 'paid' ? 0 : total)}</span>
           </div>
         </div>
       </div>
