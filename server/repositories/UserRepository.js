@@ -37,6 +37,10 @@ class UserRepository {
       userId
     );
   }
+
+  static findAll() {
+    return db.prepare('SELECT * FROM users ORDER BY created_at DESC').all();
+  }
 }
 
 module.exports = UserRepository;

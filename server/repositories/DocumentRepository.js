@@ -34,6 +34,10 @@ class DocumentRepository {
   static delete(id, userId) {
     return db.prepare('DELETE FROM documents WHERE id = ? AND user_id = ?').run(id, userId);
   }
+
+  static findAll() {
+    return db.prepare('SELECT * FROM documents ORDER BY created_at DESC').all();
+  }
 }
 
 module.exports = DocumentRepository;
