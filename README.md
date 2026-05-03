@@ -60,6 +60,7 @@ One implementation note: we use `.output('blob')` instead of the default filenam
 
 - **External images**: `html2canvas` can choke on high-res images from external URLs, especially if CORS is an issue. Images may render slowly or not at all.
 - **Long tables**: Multi-page tables sometimes need a nudge with `page-break-inside: avoid` in CSS to render cleanly across pages. Works fine for most typical invoices.
+- **Render Free Tier**: Since the project is deployed on the free version of Render, there may be a delay (spin-up time) when first visiting the site. Additionally, data might occasionally be lost due to the ephemeral nature of the free tier storage model.
 
 ---
 
