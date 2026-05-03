@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import DocumentPreview from '../components/DocumentPreview'
 
@@ -11,6 +11,38 @@ export default function History() {
   const [sortDir, setSortDir] = useState('desc')          // 'asc' | 'desc'
   const [filterType, setFilterType] = useState('all')     // 'all' | 'invoice' | 'purchase_order'
   const [viewDoc, setViewDoc] = useState(null)            // document to view in modal
+  const previewRef = useRef(null)
+
+  const handleDownloadPDF = async () => {
+    if (!viewDoc) return
+    try {
+      const element = previewRef.current
+      if (!element) throw new Error('Preview not found')
+
+      const html2pdf = (await import('html2pdf.js')).default
+      const pdfFilename = `${viewDoc.doc_number || 'document'}.pdf`
+
+      const opt = {
+        margin: 0,
+        filename: pdfFilename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          scrollY: 0
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      }
+
+      await html2pdf().set(opt).from(element).save()
+    } catch (err) {
+      console.error(err)
+      alert('Failed to generate PDF')
+    }
+  }
 
   useEffect(() => {
     fetchDocuments()
@@ -410,12 +442,19 @@ export default function History() {
                       transaction_id: viewDoc.transaction_id
                     })}
                   >
-                    Update Payment
+                  <button 
+                    className="btn btn-secondary btn-full" 
+                    style={{ marginTop: '0.5rem', width: '100%' }}
+                    onClick={handleDownloadPDF}
+                  >
+                    <i className="fas fa-file-pdf"></i> Download PDF
                   </button>
                 </div>
               </div>
               <div className="modal-main">
                 <DocumentPreview
+                  ref={previewRef}
+                  user={null} // We can pass real user if needed
                   data={buildPreviewData(viewDoc)}
                   subtotal={viewDoc.subtotal || 0}
                   taxAmount={viewDoc.tax_amount || 0}

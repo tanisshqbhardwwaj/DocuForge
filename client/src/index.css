@@ -558,15 +558,26 @@ textarea.form-input {
    GST Tax Invoice Preview
    ========================================== */
 .tax-invoice {
+  width: 210mm;
+  min-height: 297mm;
   background: #ffffff;
   color: #1a1a2e;
-  border-radius: 6px;
+  padding: 15mm;
+  margin: 0 auto;
   font-family: 'Inter', sans-serif;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  border: 2px solid #334155;
-  overflow: hidden;
-  position: relative; /* For stamp positioning */
+  font-size: 10pt;
+  line-height: 1.4;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Ensure the preview container can handle the A4 height */
+.preview-wrapper {
+  background: #1e1e2e;
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
 }
 
 /* PAID Stamp Style */
