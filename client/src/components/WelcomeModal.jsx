@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export default function WelcomeModal({ user }) {
+export default function WelcomeModal({ user, onStartTour }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isFirstVisit, setIsFirstVisit] = useState(false)
 
@@ -11,7 +11,6 @@ export default function WelcomeModal({ user }) {
       localStorage.setItem('df_visited', 'true')
       setIsOpen(true)
     } else {
-      // For returning users, maybe show once per session?
       const sessionSeen = sessionStorage.getItem('df_session_seen')
       if (!sessionSeen) {
         setIsFirstVisit(false)
@@ -26,6 +25,13 @@ export default function WelcomeModal({ user }) {
   const initials = user?.company_name
     ? user.company_name[0].toUpperCase()
     : user?.email?.[0].toUpperCase() || '?'
+
+  const handlePrimaryClick = () => {
+    setIsOpen(false)
+    if (isFirstVisit && onStartTour) {
+      onStartTour()
+    }
+  }
 
   return (
     <div className="modal-overlay welcome-modal-overlay">
@@ -53,12 +59,15 @@ export default function WelcomeModal({ user }) {
         </p>
 
         <div className="welcome-actions">
-          <button className="btn btn-primary btn-full" onClick={() => setIsOpen(false)}>
+          <button className="btn btn-primary btn-full" onClick={handlePrimaryClick}>
             {isFirstVisit ? 'Show Me Around' : 'Get Started'}
           </button>
-          <button className="btn btn-ghost btn-full" onClick={() => setIsOpen(false)}>
-            No thanks, I'll explore it.
-          </button>
+          
+          {isFirstVisit && (
+            <button className="btn btn-ghost btn-full" onClick={() => setIsOpen(false)}>
+              No thanks, I'll explore it.
+            </button>
+          )}
         </div>
       </div>
     </div>

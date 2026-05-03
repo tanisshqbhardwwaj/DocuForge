@@ -6,6 +6,8 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import OrgSetup from './pages/OrgSetup'
 import WelcomeModal from './components/WelcomeModal'
+import GuidedTour from './components/GuidedTour'
+import { useState } from 'react'
 import './App.css'
 
 function ProtectedRoute({ children }) {
@@ -42,6 +44,7 @@ function SetupRoute({ children }) {
 function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [showTour, setShowTour] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -54,7 +57,8 @@ function AppLayout() {
 
   return (
     <>
-      <WelcomeModal user={user} />
+      <WelcomeModal user={user} onStartTour={() => setShowTour(true)} />
+      {showTour && <GuidedTour onComplete={() => setShowTour(false)} />}
       <nav className="navbar" id="main-navbar">
         <div className="nav-brand">
           <i className="fas fa-file-invoice"></i>

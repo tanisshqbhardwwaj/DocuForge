@@ -2267,3 +2267,69 @@ textarea.form-input {
   from { transform: scale(0.8); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* Guided Tour */
+.tour-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 99999;
+  pointer-events: none;
+}
+
+.tour-highlight {
+  position: fixed;
+  background: transparent;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px var(--clr-primary-hover);
+  border-radius: 8px;
+  z-index: 100000;
+  transition: all 0.4s ease;
+  pointer-events: none;
+}
+
+.tour-popover {
+  position: fixed;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-focus);
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  width: 300px;
+  z-index: 100001;
+  pointer-events: all;
+  box-shadow: var(--shadow-lg);
+}
+
+.tour-step-indicator {
+  font-size: 0.7rem;
+  color: var(--clr-primary-hover);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.tour-title {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.tour-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.tour-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+}

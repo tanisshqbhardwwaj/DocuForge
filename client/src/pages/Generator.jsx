@@ -213,7 +213,7 @@ export default function Generator() {
       </div>
 
       <div className="split-pane">
-        <div className="pane-left">
+        <div className="pane-left" id="document-form">
           <DocumentForm
             formData={formData}
             onChange={handleChange}
