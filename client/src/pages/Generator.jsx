@@ -65,8 +65,31 @@ export default function Generator() {
   const taxAmount = subtotal * (formData.tax_rate / 100)
   const total = subtotal + taxAmount
 
+  // Helper: calculate due date from invoice date + payment terms
+  const calcDueDate = (invoiceDate, terms) => {
+    const base = new Date(invoiceDate)
+    if (isNaN(base.getTime())) return ''
+    let days = 30
+    if (terms === 'Due on Receipt') days = 0
+    else {
+      const match = terms?.match(/Net\s+(\d+)/)
+      if (match) days = parseInt(match[1], 10)
+    }
+    base.setDate(base.getDate() + days)
+    return base.toISOString().split('T')[0]
+  }
+
   const handleChange = useCallback((field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => {
+      const next = { ...prev, [field]: value }
+      // Auto-sync due_date when payment terms or invoice date changes
+      if (field === 'payment_terms') {
+        next.due_date = calcDueDate(prev.date, value)
+      } else if (field === 'date') {
+        next.due_date = calcDueDate(value, prev.payment_terms)
+      }
+      return next
+    })
   }, [])
 
   const handleItemChange = useCallback((index, field, value) => {

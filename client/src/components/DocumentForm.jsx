@@ -34,9 +34,9 @@ export default function DocumentForm({
               value={formData.date} onChange={e => onChange('date', e.target.value)} />
           </div>
           <div className="form-group">
-            <label htmlFor="input-due-date">Due Date</label>
-            <input id="input-due-date" type="date" className="form-input"
-              value={formData.due_date} onChange={e => onChange('due_date', e.target.value)} />
+            <label htmlFor="input-due-date">Due Date <span className="label-hint">(auto from terms)</span></label>
+            <input id="input-due-date" type="date" className="form-input input-readonly"
+              value={formData.due_date} readOnly />
           </div>
           <div className="form-group">
             <label htmlFor="input-place">Place of Supply</label>

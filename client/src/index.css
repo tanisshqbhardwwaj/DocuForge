@@ -441,6 +441,18 @@ textarea.form-input {
   min-height: 50px;
 }
 
+.input-readonly {
+  opacity: 0.7;
+  cursor: not-allowed;
+  border-style: dashed !important;
+}
+
+.label-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
 /* Line Items — Stacked Card Layout */
 .items-list {
   display: flex;
