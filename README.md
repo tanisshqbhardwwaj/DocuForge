@@ -1,62 +1,73 @@
-# DocuForge — Smart Billing for Growing Teams 🚀
+# DocuForge — Live Document Generator
 
-I built DocuForge because I realized that for most small business owners, generating professional, GST-compliant invoices feels like a chore. DocuForge is a sleek, professional document generator that gives you a live preview of exactly what your PDF will look like before you hit download.
+I built this because generating GST-compliant invoices and payment orders felt way more painful than it should be. DocuForge lets you fill a form and get a real, properly formatted PDF out the other end — live preview included, so you're not flying blind.
 
----
 
-## 🛠 Tech Stack
-
-- **Frontend**: React.js with Vanilla CSS (Clean, fast, and no bulky frameworks).
-- **Backend**: Node.js + Express.js (Refactored into a professional Controller-Service-Repository pattern).
-- **Database**: SQLite (using `better-sqlite3`). Chosen for its zero-maintenance, high speed, and local portability.
-- **Infrastructure**: Hosted on Render with **Persistent Disk** storage to ensure data remains secure across restarts.
 
 ---
 
-## 🚀 How to Run Locally
+## Getting Started
 
-### 1. Install Dependencies
-I have set up a root-level script to install everything for both the frontend and backend in one shot:
+### Prerequisites
+- Node.js v18+
+- npm (ships with Node)
+
+### Install
+
 ```bash
+# Installs dependencies for root, client, and server in one shot
 npm run install-all
 ```
 
-### 2. Start the Project
-To run both the **Client** and **Server** concurrently:
+### Run
+
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+This starts both the backend and frontend together. If you need them separately:
+
+```bash
+npm run server   # backend only
+npm run client   # frontend only
+```
 
 ---
 
-## 📄 PDF Generation Logic
+## PDF Generation
 
-For PDF generation, I chose **`html2pdf.js`**.
+We're using **`html2pdf.js`**, which combines `html2canvas` and `jsPDF` under the hood.
 
-**Why this library?**
-*   **What You See Is What You Get**: It converts the actual HTML/CSS from the live preview directly into a PDF. This ensures the design stays 100% consistent.
-*   **Client-Side Processing**: It runs entirely in the user's browser. This reduces server load and makes the generation feel instant for the user.
-*   **Ease of Use**: It combines `html2canvas` (for rendering) and `jsPDF` (for generating the document) into a single, reliable workflow.
+The main reason we went with it: the live preview in the app is just HTML/CSS, and `html2pdf.js` renders that directly into the PDF. No manually re-drawing text and shapes on a canvas — what you see in the preview is (mostly) what you get in the file.
 
----
+It also runs entirely on the client, so no server round-trips for PDF generation.
 
-## 🐛 Known Bugs & Future Improvements
-
-### Known Issues:
-- **Image Loading**: High-resolution external images can sometimes be slow to render in the PDF if the browser's memory is low.
-- **Large Tables**: Invoices with 50+ line items may occasionally experience page-break issues (though it works perfectly for standard business use).
-
-### With more time, I would:
-- **Cloud Storage**: Move PDFs to a cloud bucket (like AWS S3) instead of generating them on-the-fly.
-- **Email Delivery**: Integrate an SMTP server to allow users to email invoices directly to clients from the dashboard.
-- **Supabase Migration**: Move from SQLite to Supabase for a more scalable, cloud-native database experience.
+One implementation note: we use `.output('blob')` instead of the default filename approach. This gives us proper control over the filename (tied to the document number) and sidesteps some quirky behavior with UUID-based names.
 
 ---
 
-## 🔐 Admin Panel
-I've included a secure **Data Explorer** for managing the live database:
-- **URL**: `/api/admin/view-data`
-- **Password**: `!@#Tanishq`
+## Features
 
-*Built with ❤️ by a developer who just wanted a better way to bill.*
+- **Tax Invoices + Payment Orders** — both document types supported, switchable from the same form
+- **Live preview** — updates as you type, no save button needed
+- **Document history** — sortable by date or amount, filterable by type, with read-only viewing for past docs
+- **Auto-save** — form data persists in localStorage, so a refresh won't wipe your work
+- **GST compliance** — HSN codes, CGST/SGST breakdowns, Indian currency formatting
+
+---
+
+## Known Issues
+
+- **External images**: `html2canvas` can choke on high-res images from external URLs, especially if CORS is an issue. Images may render slowly or not at all.
+- **Long tables**: Multi-page tables sometimes need a nudge with `page-break-inside: avoid` in CSS to render cleanly across pages. Works fine for most typical invoices.
+
+---
+
+## What's Missing (Roadmap-ish)
+
+These didn't make the cut for now, but they're the obvious next steps:
+
+- **Cloud PDF storage** — Right now PDFs are generated on the fly and not stored. Hooking up S3 or GCS would let you share persistent links.
+- **User roles** — Admin/Staff separation for teams with multiple people generating docs.
+- **Email delivery** — Send the PDF directly from the app via SMTP or SendGrid.
+- **More templates** — A template gallery would open it up considerably.
