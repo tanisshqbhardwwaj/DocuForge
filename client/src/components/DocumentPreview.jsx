@@ -56,10 +56,10 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
           </div>
           <div className="ti-company-info">
             <h2 className="ti-company-name">{data.sender_name || 'Your Company'}</h2>
-            {data.sender_address && <p>{data.sender_address}</p>}
-            {data.sender_email && <p>{data.sender_email}</p>}
-            {data.sender_phone && <p>{data.sender_phone}</p>}
-            {data.sender_gstin && <p><strong>GSTIN: {data.sender_gstin}</strong></p>}
+            {data.sender_address ? <p>{data.sender_address}</p> : null}
+            {data.sender_email ? <p>{data.sender_email}</p> : null}
+            {data.sender_phone ? <p>{data.sender_phone}</p> : null}
+            {data.sender_gstin ? <p><strong>GSTIN: {data.sender_gstin}</strong></p> : null}
           </div>
         </div>
         <div className="ti-title-block">
@@ -127,10 +127,10 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
         <div className="ti-party">
           <div className="ti-party-label">Details of Receiver (Bill To)</div>
           <h3>{data.client_name || 'Client Name'}</h3>
-          {data.client_address && <p>{data.client_address}</p>}
-          {data.client_email && <p>{data.client_email}</p>}
-          {data.client_phone && <p>Phone: {data.client_phone}</p>}
-          {data.client_gstin && <p><strong>GSTIN: {data.client_gstin}</strong></p>}
+          {data.client_address ? <p>{data.client_address}</p> : null}
+          {data.client_email ? <p>{data.client_email}</p> : null}
+          {data.client_phone ? <p>Phone: {data.client_phone}</p> : null}
+          {data.client_gstin ? <p><strong>GSTIN: {data.client_gstin}</strong></p> : null}
         </div>
         <div className="ti-party">
           <div className="ti-party-label">Details of Consignee (Ship To)</div>
@@ -145,7 +145,7 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
           <tr>
             <th style={{width:'5%'}}>#</th>
             <th style={{width: user?.org_gst_registered ? '35%' : '50%'}}>Item &amp; Description</th>
-            {user?.org_gst_registered && <th style={{width:'15%'}}>HSN/SAC</th>}
+            {!!user?.org_gst_registered ? <th style={{width:'15%'}}>HSN/SAC</th> : null}
             <th style={{width:'10%'}}>Qty</th>
             <th style={{width:'15%'}}>Rate</th>
             <th style={{width:'20%'}}>Amount</th>
@@ -157,17 +157,17 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
               <td>{i + 1}</td>
               <td>
                 <strong>{item.description || '—'}</strong>
-                {user?.org_gst_registered && item.hsn && <div className="ti-hsn-inline">{item.hsn}</div>}
+                {!!user?.org_gst_registered && !!item.hsn ? <div className="ti-hsn-inline">{item.hsn}</div> : null}
               </td>
-              {user?.org_gst_registered && <td>{item.hsn || '—'}</td>}
+              {!!user?.org_gst_registered ? <td>{item.hsn || '—'}</td> : null}
               <td>{item.quantity}</td>
               <td>₹{fmt(item.unit_price)}</td>
               <td>₹{fmt(item.quantity * item.unit_price)}</td>
             </tr>
           ))}
-          {data.items.length === 0 && (
-            <tr><td colSpan="6" style={{textAlign:'center', color:'#000000'}}>No items</td></tr>
-          )}
+          {data.items.length === 0 ? (
+            <tr><td colSpan={!!user?.org_gst_registered ? 6 : 5} style={{textAlign:'center', color:'#000000'}}>No items</td></tr>
+          ) : null}
         </tbody>
       </table>
 
@@ -178,19 +178,19 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
           <p className="ti-amount-words"><strong>{numberToWords(total)}</strong></p>
 
           {/* Bank Details */}
-          {(data.bank_name || data.bank_account) && (
+          {(data.bank_name || data.bank_account) ? (
             <div className="ti-bank">
               <div className="ti-label" style={{marginTop:'12px'}}>Bank Details</div>
               <table className="ti-bank-table">
                 <tbody>
-                  {data.bank_name && <tr><td>Name</td><td>: {data.bank_name}</td></tr>}
-                  {data.bank_account && <tr><td>A/C No.</td><td>: {data.bank_account}</td></tr>}
-                  {data.bank_ifsc && <tr><td>IFSC Code</td><td>: {data.bank_ifsc}</td></tr>}
-                  {data.bank_branch && <tr><td>Branch</td><td>: {data.bank_branch}</td></tr>}
+                  {data.bank_name ? <tr><td>Name</td><td>: {data.bank_name}</td></tr> : null}
+                  {data.bank_account ? <tr><td>A/C No.</td><td>: {data.bank_account}</td></tr> : null}
+                  {data.bank_ifsc ? <tr><td>IFSC Code</td><td>: {data.bank_ifsc}</td></tr> : null}
+                  {data.bank_branch ? <tr><td>Branch</td><td>: {data.bank_branch}</td></tr> : null}
                 </tbody>
               </table>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="ti-totals">
@@ -198,14 +198,14 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
             <span>Sub Total</span>
             <span>₹{fmt(subtotal)}</span>
           </div>
-          {data.discount > 0 && (
+          {data.discount > 0 ? (
             <div className="ti-total-row">
               <span>Discount ({data.discount}%)</span>
               <span>-₹{fmt(discountAmount)}</span>
             </div>
-          )}
-          {data.tax_rate > 0 && (
-            user?.org_gst_registered ? (
+          ) : null}
+          {data.tax_rate > 0 ? (
+            !!user?.org_gst_registered ? (
               <>
                 <div className="ti-total-row">
                   <span>CGST ({halfTax}%)</span>
@@ -217,14 +217,14 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
                 </div>
               </>
             ) : (
-              data.show_tax_field && (
+              data.show_tax_field ? (
                 <div className="ti-total-row">
                   <span>Tax ({data.tax_rate}%)</span>
                   <span>₹{fmt(taxableAmount * data.tax_rate / 100)}</span>
                 </div>
-              )
+              ) : null
             )
-          )}
+          ) : null}
           <div className="ti-total-row ti-grand-total">
             <span>Total</span>
             <span>₹{fmt(total)}</span>
@@ -233,28 +233,28 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
             <span>Balance Due</span>
             <span>₹{fmt(data.payment_status === 'paid' ? 0 : total)}</span>
           </div>
-          {data.payment_status === 'paid' && (
+          {data.payment_status === 'paid' ? (
             <div className="ti-total-row" style={{ color: '#10b981', fontWeight: '900', fontSize: '0.85rem', paddingTop: '8px', borderTop: '1px dashed #cbd5e1', marginTop: '4px' }}>
               <span>PAYMENT STATUS</span>
               <span>PAID</span>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* Terms */}
-      {data.terms && (
+      {data.terms ? (
         <div className="ti-terms">
           <div className="ti-label">Terms &amp; Conditions</div>
           <p>{data.terms}</p>
         </div>
-      )}
+      ) : null}
 
-      {data.notes && (
+      {data.notes ? (
         <div className="ti-notes-footer">
           <p><em>{data.notes}</em></p>
         </div>
-      )}
+      ) : null}
 
       {/* Signature */}
       <div className="ti-signature">

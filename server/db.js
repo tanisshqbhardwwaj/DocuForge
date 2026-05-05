@@ -80,19 +80,24 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
+`);
 
-  // Migration for shipping/logistics fields
-  const docCols = db.prepare("PRAGMA table_info(documents)").all();
-  const hasPo = docCols.some(c => c.name === 'po_number');
-  if (!hasPo) {
+// Migration for shipping/logistics fields
+const docCols = db.prepare("PRAGMA table_info(documents)").all();
+const hasPo = docCols.some(c => c.name === 'po_number');
+if (!hasPo) {
+  try {
     db.prepare("ALTER TABLE documents ADD COLUMN po_number TEXT DEFAULT ''").run();
     db.prepare("ALTER TABLE documents ADD COLUMN po_date TEXT DEFAULT ''").run();
     db.prepare("ALTER TABLE documents ADD COLUMN shipping_date TEXT DEFAULT ''").run();
     db.prepare("ALTER TABLE documents ADD COLUMN transport_mode TEXT DEFAULT ''").run();
     db.prepare("ALTER TABLE documents ADD COLUMN transport_name TEXT DEFAULT ''").run();
     db.prepare("ALTER TABLE documents ADD COLUMN sales_person TEXT DEFAULT ''").run();
+  } catch (e) {
+    // Columns might already exist if migration partially ran
   }
-`);
+}
+
 
 // Add columns to existing tables (safe — errors silently if columns already exist)
 const newColumns = [

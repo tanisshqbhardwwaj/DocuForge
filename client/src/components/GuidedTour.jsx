@@ -75,17 +75,34 @@ export default function GuidedTour({ onComplete }) {
     }
   }
 
+  const popoverWidth = 300
+  const margin = 20
+
+  let popoverTop = 0
+  let popoverLeft = 0
+
+  if (steps[step].pos === 'bottom') {
+    popoverTop = (style.top || 0) + (style.height || 0) + margin
+    popoverLeft = (style.left || 0) + ((style.width || 0) / 2) - (popoverWidth / 2)
+  } else if (steps[step].pos === 'right') {
+    popoverTop = style.top || 0
+    popoverLeft = (style.left || 0) + (style.width || 0) + margin
+  } else {
+    popoverTop = window.innerHeight / 2 - 100
+    popoverLeft = window.innerWidth / 2 - (popoverWidth / 2)
+  }
+
+  // Boundary checks
+  popoverLeft = Math.max(margin, Math.min(popoverLeft, window.innerWidth - popoverWidth - margin))
+  popoverTop = Math.max(margin, Math.min(popoverTop, window.innerHeight - 300))
+
   return (
     <div className="tour-overlay">
       <div className="tour-highlight" style={style}></div>
       
       <div className="tour-popover animate-pop" style={{
-        top: steps[step].pos === 'bottom' ? style.top + style.height + 20 : 
-             steps[step].pos === 'right' ? style.top : '50%',
-        left: steps[step].pos === 'right' ? style.left + style.width + 20 : 
-              style.left + (style.width / 2) - 150,
-        transform: steps[step].pos === 'bottom' ? 'none' : 
-                   steps[step].pos === 'right' ? 'none' : 'translate(-50%, -50%)'
+        top: popoverTop,
+        left: popoverLeft
       }}>
         <div className="tour-step-indicator">Step {step + 1} of {steps.length}</div>
         <h3 className="tour-title">{steps[step].title}</h3>
@@ -101,3 +118,4 @@ export default function GuidedTour({ onComplete }) {
     </div>
   )
 }
+
