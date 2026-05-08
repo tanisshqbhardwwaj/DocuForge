@@ -295,6 +295,12 @@ export default function DocumentForm({
                     onChange={e => onItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
                     id={`item-price-${index}`} />
                 </div>
+                <div className="form-group item-amount-box">
+                  <label>Amount</label>
+                  <div className="amount-display">
+                    {fmt(item.quantity * item.unit_price)}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -403,49 +409,21 @@ export default function DocumentForm({
           <h2 className="section-title"><i className="fas fa-truck"></i> Shipping &amp; Logistics</h2>
           <div className="form-grid cols-2">
             <div className="form-group">
-              <label htmlFor="input-po-number">P.O. Number (#)</label>
-              <input id="input-po-number" type="text" className="form-input"
-                value={formData.po_number || ''} onChange={e => onChange('po_number', e.target.value)}
-                placeholder="e.g. 321654" />
-            </div>
-            <div className="form-group">
-              <label htmlFor="input-po-date">P.O. Date</label>
-              <input id="input-po-date" type="date" className="form-input"
-                value={formData.po_date || ''} onChange={e => onChange('po_date', e.target.value)} />
-            </div>
-            <div className="form-group">
               <label htmlFor="input-shipping-date">Shipping Date</label>
               <input id="input-shipping-date" type="date" className="form-input"
                 value={formData.shipping_date || ''} onChange={e => onChange('shipping_date', e.target.value)} />
             </div>
             <div className="form-group">
               <label htmlFor="input-transport-mode">Transport Mode</label>
-              <select id="input-transport-mode" className="form-input"
-                value={formData.transport_mode || ''} onChange={e => onChange('transport_mode', e.target.value)}>
-                <option value="">Select Mode</option>
-                <option value="By Road">By Road</option>
-                <option value="By Air">By Air</option>
-                <option value="By Sea">By Sea</option>
-                <option value="By Rail">By Rail</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="input-transport-name">Transport Name</label>
-              <input id="input-transport-name" type="text" className="form-input"
-                value={formData.transport_name || ''} onChange={e => onChange('transport_name', e.target.value)}
-                placeholder="e.g. ABT Transport" />
+              <input id="input-transport-mode" type="text" className="form-input"
+                value={formData.transport_mode || ''} onChange={e => onChange('transport_mode', e.target.value)}
+                placeholder="e.g. By Road, Courier" />
             </div>
             <div className="form-group">
               <label htmlFor="input-vehicle-number">Vehicle Number</label>
               <input id="input-vehicle-number" type="text" className="form-input"
                 value={formData.vehicle_number || ''} onChange={e => onChange('vehicle_number', e.target.value)}
                 placeholder="e.g. TN-01-AB-1234" />
-            </div>
-            <div className="form-group">
-              <label htmlFor="input-eway-bill">E-Way Bill Number</label>
-              <input id="input-eway-bill" type="text" className="form-input"
-                value={formData.eway_bill || ''} onChange={e => onChange('eway_bill', e.target.value)}
-                placeholder="12-digit E-Way Bill #" />
             </div>
             <div className="form-group">
               <label htmlFor="input-sales-person">Sales Person</label>

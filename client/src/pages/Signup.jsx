@@ -40,6 +40,8 @@ export default function Signup() {
     setLoading(true);
     try {
       await signup(form.company_name, form.email, form.phone, form.password);
+      localStorage.removeItem("df_visited"); // Ensure tour shows for new users
+      sessionStorage.removeItem("df_session_v2");
       navigate("/setup");
     } catch (err) {
       setError(err.message);

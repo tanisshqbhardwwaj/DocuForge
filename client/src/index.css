@@ -416,6 +416,8 @@ body {
 }
 
 .form-input {
+  width: 100%;
+  min-width: 0;
   padding: 10px 14px;
   background: var(--bg-input);
   border: 1px solid var(--border);
@@ -525,7 +527,7 @@ textarea.form-input {
 
 .item-row-bottom {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.2fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr);
   gap: 12px;
   align-items: end;
 }
@@ -541,7 +543,8 @@ textarea.form-input {
   min-height: 43px;
   display: flex;
   align-items: center;
-  min-width: 100px;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

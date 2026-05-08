@@ -60,6 +60,9 @@ export function AuthProvider({ children }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Signup failed");
 
+    localStorage.removeItem("df_visited");
+    sessionStorage.removeItem("df_session_v2");
+
     localStorage.setItem("docuforge_token", data.token);
     setToken(data.token);
     setUser(data.user);

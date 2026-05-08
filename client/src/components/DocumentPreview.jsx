@@ -118,11 +118,13 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
                 <>
                   <strong>{data.ship_to_name}</strong><br />
                   {data.ship_to_address}
+                  {data.ship_to_phone && <><br />Phone: {data.ship_to_phone}</>}
                 </>
               ) : (
                 <>
-                  <strong>{data.client_name}</strong><br />
-                  {data.client_address}
+                  <strong>{data.sender_name}</strong><br />
+                  {data.sender_address}
+                  {data.sender_phone && <><br />Phone: {data.sender_phone}</>}
                 </>
               )}
             </div>
@@ -278,8 +280,8 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
             <span className="ti-value">{formatDate(data.date)}</span>
           </div>
           <div className="ti-meta-cell">
-            <span className="ti-label">Shipping Date</span>
-            <span className="ti-value">{formatDate(data.shipping_date) || '—'}</span>
+            <span className="ti-label">Due Date</span>
+            <span className="ti-value">{formatDate(data.due_date)}</span>
           </div>
         </div>
         <div className="ti-meta-row">
@@ -288,48 +290,28 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
             <span className="ti-value">{data.payment_terms || 'Net 30'}</span>
           </div>
           <div className="ti-meta-cell">
+            <span className="ti-label">Place of Supply</span>
+            <span className="ti-value">{data.place_of_supply || '—'}</span>
+          </div>
+        </div>
+        <div className="ti-meta-row">
+          <div className="ti-meta-cell">
+            <span className="ti-label">Shipping Date</span>
+            <span className="ti-value">{formatDate(data.shipping_date) || '—'}</span>
+          </div>
+          <div className="ti-meta-cell">
             <span className="ti-label">Transport Mode</span>
             <span className="ti-value">{data.transport_mode || '—'}</span>
           </div>
         </div>
         <div className="ti-meta-row">
           <div className="ti-meta-cell">
-            <span className="ti-label">Due Date</span>
-            <span className="ti-value">{formatDate(data.due_date)}</span>
-          </div>
-          <div className="ti-meta-cell">
-            <span className="ti-label">Transport Name</span>
-            <span className="ti-value">{data.transport_name || '—'}</span>
-          </div>
-        </div>
-        <div className="ti-meta-row">
-          <div className="ti-meta-cell">
-            <span className="ti-label">P.O. Number (#)</span>
-            <span className="ti-value">{data.po_number || '—'}</span>
-          </div>
-          <div className="ti-meta-cell">
             <span className="ti-label">Vehicle Number</span>
             <span className="ti-value">{data.vehicle_number || '—'}</span>
           </div>
-        </div>
-        <div className="ti-meta-row">
-          <div className="ti-meta-cell">
-            <span className="ti-label">P.O. Date</span>
-            <span className="ti-value">{formatDate(data.po_date) || '—'}</span>
-          </div>
-          <div className="ti-meta-cell">
-            <span className="ti-label">E-Way Bill #</span>
-            <span className="ti-value">{data.eway_bill || '—'}</span>
-          </div>
-        </div>
-        <div className="ti-meta-row">
           <div className="ti-meta-cell">
             <span className="ti-label">Sales Person</span>
             <span className="ti-value">{data.sales_person || '—'}</span>
-          </div>
-          <div className="ti-meta-cell">
-            <span className="ti-label">Place of Supply</span>
-            <span className="ti-value">{data.place_of_supply || '—'}</span>
           </div>
         </div>
       </div>
@@ -414,16 +396,25 @@ const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, 
             </div>
           )}
           {data.tax_rate > 0 && (
-            <>
-              <div className="ti-total-row">
-                <span>CGST ({(data.tax_rate / 2)}%)</span>
-                <span>₹{fmt(taxAmount / 2)}</span>
-              </div>
-              <div className="ti-total-row">
-                <span>SGST ({(data.tax_rate / 2)}%)</span>
-                <span>₹{fmt(taxAmount / 2)}</span>
-              </div>
-            </>
+            user?.org_gst_registered ? (
+              <>
+                <div className="ti-total-row">
+                  <span>CGST ({(data.tax_rate / 2)}%)</span>
+                  <span>₹{fmt(taxAmount / 2)}</span>
+                </div>
+                <div className="ti-total-row">
+                  <span>SGST ({(data.tax_rate / 2)}%)</span>
+                  <span>₹{fmt(taxAmount / 2)}</span>
+                </div>
+              </>
+            ) : (
+              data.show_tax_field ? (
+                <div className="ti-total-row">
+                  <span>Tax ({data.tax_rate}%)</span>
+                  <span>₹{fmt(taxAmount)}</span>
+                </div>
+              ) : null
+            )
           )}
           <div className="ti-total-row ti-grand-total">
             <span>Total</span>

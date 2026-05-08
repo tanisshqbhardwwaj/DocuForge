@@ -94,7 +94,9 @@ export default function Generator() {
   );
   const discountAmount = subtotal * ((formData.discount || 0) / 100);
   const taxableAmount = subtotal - discountAmount;
-  const taxAmount = taxableAmount * ((formData.tax_rate || 0) / 100);
+  const isGstRegistered = !!user?.org_gst_registered;
+  const applyTax = isGstRegistered || formData.show_tax_field;
+  const taxAmount = applyTax ? taxableAmount * ((formData.tax_rate || 0) / 100) : 0;
   const total = taxableAmount + taxAmount;
 
   // Helper: calculate due date from invoice date + payment terms
