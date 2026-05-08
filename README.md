@@ -1,15 +1,16 @@
-# DocuForge — Live Document Generator
+# DocuForge — Professional GST Invoice & Document Generator
 
-I built this because generating GST-compliant invoices and payment orders felt way more painful than it should be. DocuForge lets you fill a form and get a real, properly formatted PDF out the other end — live preview included, so you're not flying blind.
+I built this because generating GST-compliant invoices and purchase orders felt way more painful than it should be. DocuForge lets you fill a form and get a real, properly formatted PDF out the other end — live preview included, so you're not flying blind.
 
-
+🔗 **Live App:** [docuforge-xi.vercel.app](https://docuforge-xi.vercel.app)
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js v18+
+
+- Node.js v20+
 - npm (ships with Node)
 
 ### Install
@@ -62,7 +63,7 @@ One implementation note: we use `.output('blob')` instead of the default filenam
 
 - **External images**: `html2canvas` can choke on high-res images from external URLs, especially if CORS is an issue. Images may render slowly or not at all.
 - **Long tables**: Multi-page tables sometimes need a nudge with `page-break-inside: avoid` in CSS to render cleanly across pages. Works fine for most typical invoices.
-- **Render Free Tier**: Since the project is deployed on the free version of Render, there may be a delay (spin-up time) when first visiting the site. Additionally, data might occasionally be lost due to the ephemeral nature of the free tier storage model.
+- **Render Free Tier**: The backend API is hosted on Render's free tier, so the first request after a period of inactivity may take a few seconds while the service cold-starts. The frontend is on Vercel and loads instantly.
 
 ---
 
