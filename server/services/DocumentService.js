@@ -1,4 +1,6 @@
-const DocumentRepository = require('../repositories/DocumentRepository');
+const DocumentRepository = require("../repositories/DocumentRepository");
+const UserRepository = require("../repositories/UserRepository");
+const MailService = require("./MailService");
 
 class DocumentService {
   static createDocument(userId, docData) {
@@ -8,16 +10,16 @@ class DocumentService {
 
   static getUserDocuments(userId) {
     const docs = DocumentRepository.findByUserId(userId);
-    return docs.map(doc => ({
+    return docs.map((doc) => ({
       ...doc,
-      items: JSON.parse(doc.items || '[]')
+      items: JSON.parse(doc.items || "[]"),
     }));
   }
 
   static getDocumentById(id, userId) {
     const doc = DocumentRepository.findByIdAndUser(id, userId);
     if (doc) {
-      doc.items = JSON.parse(doc.items || '[]');
+      doc.items = JSON.parse(doc.items || "[]");
     }
     return doc;
   }
@@ -28,7 +30,23 @@ class DocumentService {
 
   static updatePayment(id, userId, paymentData) {
     const { status, method, transaction_id } = paymentData;
-    return DocumentRepository.updatePaymentStatus(id, userId, status, method, transaction_id);
+    return DocumentRepository.updatePaymentStatus(
+      id,
+      userId,
+      status,
+      method,
+      transaction_id,
+    );
+  }
+
+  static async sendEmail(id, userId, recipientEmail) {
+    const doc = this.getDocumentById(id, userId);
+    if (!doc) throw new Error("Document not found");
+
+    const user = UserRepository.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    return await MailService.sendInvoice(user, doc, recipientEmail);
   }
 }
 

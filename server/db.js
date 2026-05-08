@@ -1,17 +1,17 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+const Database = require("better-sqlite3");
+const path = require("path");
+const fs = require("fs");
 
 // Ensure data directory exists
-const dataDir = path.join(__dirname, '..', 'data');
+const dataDir = path.join(__dirname, "..", "data");
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const db = new Database(path.join(dataDir, 'docuforge.db'));
+const db = new Database(path.join(dataDir, "docuforge.db"));
 
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+db.pragma("journal_mode = WAL");
+db.pragma("foreign_keys = ON");
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -33,6 +33,8 @@ db.exec(`
     org_address TEXT DEFAULT '',
     org_phone TEXT DEFAULT '',
     org_email TEXT DEFAULT '',
+    org_industry TEXT DEFAULT '',
+    org_logo TEXT DEFAULT '',
     created_at TEXT DEFAULT (datetime('now'))
   );
 
@@ -84,35 +86,48 @@ db.exec(`
 
 // Migration for shipping/logistics fields
 const docCols = db.prepare("PRAGMA table_info(documents)").all();
-const hasPo = docCols.some(c => c.name === 'po_number');
+const hasPo = docCols.some((c) => c.name === "po_number");
 if (!hasPo) {
   try {
-    db.prepare("ALTER TABLE documents ADD COLUMN po_number TEXT DEFAULT ''").run();
-    db.prepare("ALTER TABLE documents ADD COLUMN po_date TEXT DEFAULT ''").run();
-    db.prepare("ALTER TABLE documents ADD COLUMN shipping_date TEXT DEFAULT ''").run();
-    db.prepare("ALTER TABLE documents ADD COLUMN transport_mode TEXT DEFAULT ''").run();
-    db.prepare("ALTER TABLE documents ADD COLUMN transport_name TEXT DEFAULT ''").run();
-    db.prepare("ALTER TABLE documents ADD COLUMN sales_person TEXT DEFAULT ''").run();
+    db.prepare(
+      "ALTER TABLE documents ADD COLUMN po_number TEXT DEFAULT ''",
+    ).run();
+    db.prepare(
+      "ALTER TABLE documents ADD COLUMN po_date TEXT DEFAULT ''",
+    ).run();
+    db.prepare(
+      "ALTER TABLE documents ADD COLUMN shipping_date TEXT DEFAULT ''",
+    ).run();
+    db.prepare(
+      "ALTER TABLE documents ADD COLUMN transport_mode TEXT DEFAULT ''",
+    ).run();
+    db.prepare(
+      "ALTER TABLE documents ADD COLUMN transport_name TEXT DEFAULT ''",
+    ).run();
+    db.prepare(
+      "ALTER TABLE documents ADD COLUMN sales_person TEXT DEFAULT ''",
+    ).run();
   } catch (e) {
     // Columns might already exist if migration partially ran
   }
 }
 
-
 // Add columns to existing tables (safe — errors silently if columns already exist)
 const newColumns = [
-  ['documents', 'sender_gstin', "TEXT DEFAULT ''"],
-  ['documents', 'client_gstin', "TEXT DEFAULT ''"],
-  ['documents', 'place_of_supply', "TEXT DEFAULT ''"],
-  ['documents', 'payment_terms', "TEXT DEFAULT 'Net 30'"],
-  ['documents', 'discount', 'REAL DEFAULT 0'],
-  ['documents', 'bank_name', "TEXT DEFAULT ''"],
-  ['documents', 'bank_account', "TEXT DEFAULT ''"],
-  ['documents', 'bank_ifsc', "TEXT DEFAULT ''"],
-  ['documents', 'bank_branch', "TEXT DEFAULT ''"],
-  ['documents', 'payment_status', "TEXT DEFAULT 'unpaid'"],
-  ['documents', 'payment_method', "TEXT DEFAULT ''"],
-  ['documents', 'transaction_id', "TEXT DEFAULT ''"],
+  ["documents", "sender_gstin", "TEXT DEFAULT ''"],
+  ["documents", "client_gstin", "TEXT DEFAULT ''"],
+  ["documents", "place_of_supply", "TEXT DEFAULT ''"],
+  ["documents", "payment_terms", "TEXT DEFAULT 'Net 30'"],
+  ["documents", "discount", "REAL DEFAULT 0"],
+  ["documents", "bank_name", "TEXT DEFAULT ''"],
+  ["documents", "bank_account", "TEXT DEFAULT ''"],
+  ["documents", "bank_ifsc", "TEXT DEFAULT ''"],
+  ["documents", "bank_branch", "TEXT DEFAULT ''"],
+  ["documents", "payment_status", "TEXT DEFAULT 'unpaid'"],
+  ["documents", "payment_method", "TEXT DEFAULT ''"],
+  ["documents", "transaction_id", "TEXT DEFAULT ''"],
+  ["users", "org_industry", "TEXT DEFAULT ''"],
+  ["users", "org_logo", "TEXT DEFAULT ''"],
 ];
 
 for (const [table, col, type] of newColumns) {

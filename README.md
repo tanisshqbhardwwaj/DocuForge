@@ -48,11 +48,13 @@ One implementation note: we use `.output('blob')` instead of the default filenam
 
 ## Features
 
-- **Tax Invoices + Payment Orders** — both document types supported, switchable from the same form
-- **Live preview** — updates as you type, no save button needed
-- **Document history** — sortable by date or amount, filterable by type, with read-only viewing for past docs
-- **Auto-save** — form data persists in localStorage, so a refresh won't wipe your work
-- **GST compliance** — HSN codes, CGST/SGST breakdowns, Indian currency formatting
+- **Dual-Mode UI Architecture** — seamlessly switch between a lean, logistics-focused Purchase Order form and a comprehensive GST Tax Invoice form. UI fields adapt automatically.
+- **Enterprise Purchase Orders** — specialized GimBooks-inspired PO template featuring advanced logistics (Requisitioner, F.O.B., Ship Via, Payment Terms), Vendor PAN/GSTIN, and custom 'Ship To' logic.
+- **Dynamic Theming** — distinctive professional aesthetics: a sleek Teal theme for Invoices and an authoritative Blue theme tailored specifically for Purchase Orders.
+- **Pixel-Perfect PDF Export** — A4-calibrated PDF generation with dynamic edge-to-edge rendering, custom branding stamps, and automatic zero-balance/discount calculations.
+- **Live Preview** — real-time document rendering. What you see perfectly matches the generated PDF.
+- **Document History & Auth** — secure user authentication, persistent document history, and auto-save capabilities.
+- **GST Compliance** — full support for Indian financial formatting, HSN codes, and CGST/SGST breakdowns.
 
 ---
 

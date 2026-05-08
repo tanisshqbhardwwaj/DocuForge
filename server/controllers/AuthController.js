@@ -1,4 +1,4 @@
-const AuthService = require('../services/AuthService');
+const AuthService = require("../services/AuthService");
 
 class AuthController {
   static async signup(req, res) {
@@ -6,7 +6,9 @@ class AuthController {
       const result = await AuthService.signup(req.body);
       res.status(201).json(result);
     } catch (err) {
-      res.status(err.message.includes('exists') ? 409 : 400).json({ error: err.message });
+      res
+        .status(err.message.includes("exists") ? 409 : 400)
+        .json({ error: err.message });
     }
   }
 

@@ -1,16 +1,16 @@
-import { useEffect } from 'react'
+import { useEffect } from "react";
 
-export default function Toast({ message, type = 'success', onClose }) {
+export default function Toast({ message, type = "success", onClose }) {
   useEffect(() => {
-    const timer = setTimeout(onClose, 3500)
-    return () => clearTimeout(timer)
-  }, [onClose])
+    const timer = setTimeout(onClose, 3500);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
   const icons = {
-    success: 'fa-check-circle',
-    error: 'fa-exclamation-circle',
-    info: 'fa-info-circle',
-  }
+    success: "fa-check-circle",
+    error: "fa-exclamation-circle",
+    info: "fa-info-circle",
+  };
 
   return (
     <div className={`toast toast-${type}`} id="toast-notification">
@@ -20,5 +20,5 @@ export default function Toast({ message, type = 'success', onClose }) {
         <i className="fas fa-times"></i>
       </button>
     </div>
-  )
+  );
 }

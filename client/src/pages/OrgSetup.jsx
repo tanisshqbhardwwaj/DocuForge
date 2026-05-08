@@ -1,69 +1,96 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function OrgSetup() {
-  const { user, saveOrganization } = useAuth()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { user, saveOrganization } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
-    org_name: user?.company_name || '',
-    org_location: 'India',
-    org_state: '',
-    org_currency: 'INR - Indian Rupee',
-    org_fiscal_year: 'April - March',
-    org_language: 'English',
-    org_timezone: '(GMT 5:30) India Standard Time',
+    org_name: user?.company_name || "",
+    org_location: "India",
+    org_state: "",
+    org_currency: "INR - Indian Rupee",
+    org_fiscal_year: "April - March",
+    org_language: "English",
+    org_timezone: "(GMT 5:30) India Standard Time",
     org_gst_registered: false,
-    org_gstin: '',
-    org_address: '',
-    org_phone: user?.phone || '',
-    org_email: user?.email || '',
-  })
+    org_gstin: "",
+    org_address: "",
+    org_phone: user?.phone || "",
+    org_email: user?.email || "",
+    org_industry: "",
+    org_logo: "",
+  });
 
   const states = [
-    'Select', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-    'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
-    'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
-    'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim',
-    'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
-  ]
+    "Select",
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Delhi",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+  ];
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
     // Basic Validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (form.org_email && !emailRegex.test(form.org_email)) {
-      setError('Please enter a valid business email address');
+      setError("Please enter a valid business email address");
       return;
     }
 
     const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
     if (form.org_phone && !phoneRegex.test(form.org_phone)) {
-      setError('Please enter a valid business phone number (digits only)');
+      setError("Please enter a valid business phone number (digits only)");
       return;
     }
 
     if (!form.org_state) {
-      setError('Please select a state');
+      setError("Please select a state");
       return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      await saveOrganization(form)
-      navigate('/')
+      await saveOrganization(form);
+      navigate("/");
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleSkip = () => navigate('/')
+  const handleSkip = () => navigate("/");
 
   return (
     <div className="setup-page">
@@ -72,7 +99,9 @@ export default function OrgSetup() {
           {/* Progress bar */}
           <div className="setup-progress">
             <div className="progress-step done">
-              <div className="step-dot"><i className="fas fa-check"></i></div>
+              <div className="step-dot">
+                <i className="fas fa-check"></i>
+              </div>
               <span>Account Created</span>
             </div>
             <div className="progress-line active"></div>
@@ -88,28 +117,102 @@ export default function OrgSetup() {
           </div>
 
           <div className="setup-welcome">
-            Welcome aboard, <strong>{user?.company_name || user?.email}!</strong>
+            Welcome aboard,{" "}
+            <strong>{user?.company_name || user?.email}!</strong>
           </div>
           <h1 className="setup-title">Tell us about your organization</h1>
-          <p className="setup-subtitle">This info will auto-fill your invoices so you never type it again.</p>
+          <p className="setup-subtitle">
+            This info will auto-fill your invoices so you never type it again.
+          </p>
 
           {error && (
-            <div className="auth-error"><i className="fas fa-exclamation-circle"></i> {error}</div>
+            <div className="auth-error">
+              <i className="fas fa-exclamation-circle"></i> {error}
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} className="setup-form" id="org-setup-form">
+          <form
+            onSubmit={handleSubmit}
+            className="setup-form"
+            id="org-setup-form"
+          >
             <div className="setup-field">
               <label htmlFor="org-name">Organization Name *</label>
-              <input id="org-name" type="text" required
-                value={form.org_name} onChange={e => setForm({ ...form, org_name: e.target.value })}
-                placeholder="Your Business Name" />
+              <input
+                id="org-name"
+                type="text"
+                required
+                value={form.org_name}
+                onChange={(e) => setForm({ ...form, org_name: e.target.value })}
+                placeholder="Your Business Name"
+              />
+            </div>
+
+            <div className="setup-field">
+              <label htmlFor="org-industry">Industry *</label>
+              <select
+                id="org-industry"
+                required
+                value={form.org_industry}
+                onChange={(e) =>
+                  setForm({ ...form, org_industry: e.target.value })
+                }
+              >
+                <option value="">Select Industry</option>
+                <option>Technology / Software</option>
+                <option>Manufacturing</option>
+                <option>Retail / E-commerce</option>
+                <option>Services / Consulting</option>
+                <option>Healthcare</option>
+                <option>Education</option>
+                <option>Construction / Real Estate</option>
+                <option>Logistics / Transport</option>
+                <option>Food & Beverage</option>
+                <option>Other</option>
+              </select>
+            </div>
+
+            <div className="setup-field">
+              <label htmlFor="org-logo">Company Logo</label>
+              <div className="logo-upload-wrapper">
+                <input
+                  id="org-logo"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () =>
+                        setForm({ ...form, org_logo: reader.result });
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+                {form.org_logo && (
+                  <div className="logo-preview-box">
+                    <img src={form.org_logo} alt="Preview" />
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, org_logo: "" })}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="setup-row">
               <div className="setup-field">
                 <label htmlFor="org-location">Organization Location *</label>
-                <select id="org-location" value={form.org_location}
-                  onChange={e => setForm({ ...form, org_location: e.target.value })}>
+                <select
+                  id="org-location"
+                  value={form.org_location}
+                  onChange={(e) =>
+                    setForm({ ...form, org_location: e.target.value })
+                  }
+                >
                   <option>India</option>
                   <option>United States</option>
                   <option>United Kingdom</option>
@@ -120,46 +223,74 @@ export default function OrgSetup() {
               </div>
               <div className="setup-field">
                 <label htmlFor="org-state">State / Union Territory *</label>
-                <select id="org-state" value={form.org_state}
-                  onChange={e => setForm({ ...form, org_state: e.target.value })}>
-                  {states.map(s => <option key={s} value={s === 'Select' ? '' : s}>{s}</option>)}
+                <select
+                  id="org-state"
+                  value={form.org_state}
+                  onChange={(e) =>
+                    setForm({ ...form, org_state: e.target.value })
+                  }
+                >
+                  {states.map((s) => (
+                    <option key={s} value={s === "Select" ? "" : s}>
+                      {s}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
             <div className="setup-field">
               <label htmlFor="org-currency">Base Currency *</label>
-              <select id="org-currency" value={form.org_currency}
-                onChange={e => setForm({ ...form, org_currency: e.target.value })}>
+              <select
+                id="org-currency"
+                value={form.org_currency}
+                onChange={(e) =>
+                  setForm({ ...form, org_currency: e.target.value })
+                }
+              >
                 <option>INR - Indian Rupee</option>
                 <option>USD - US Dollar</option>
                 <option>EUR - Euro</option>
                 <option>GBP - British Pound</option>
               </select>
-              <span className="field-hint">The base currency cannot be changed later.</span>
+              <span className="field-hint">
+                The base currency cannot be changed later.
+              </span>
             </div>
 
             <div className="setup-row three-col">
               <div className="setup-field">
                 <label>Fiscal Year *</label>
-                <select value={form.org_fiscal_year}
-                  onChange={e => setForm({ ...form, org_fiscal_year: e.target.value })}>
+                <select
+                  value={form.org_fiscal_year}
+                  onChange={(e) =>
+                    setForm({ ...form, org_fiscal_year: e.target.value })
+                  }
+                >
                   <option>April - March</option>
                   <option>January - December</option>
                 </select>
               </div>
               <div className="setup-field">
                 <label>Language *</label>
-                <select value={form.org_language}
-                  onChange={e => setForm({ ...form, org_language: e.target.value })}>
+                <select
+                  value={form.org_language}
+                  onChange={(e) =>
+                    setForm({ ...form, org_language: e.target.value })
+                  }
+                >
                   <option>English</option>
                   <option>Hindi</option>
                 </select>
               </div>
               <div className="setup-field">
                 <label>Time Zone *</label>
-                <select value={form.org_timezone}
-                  onChange={e => setForm({ ...form, org_timezone: e.target.value })}>
+                <select
+                  value={form.org_timezone}
+                  onChange={(e) =>
+                    setForm({ ...form, org_timezone: e.target.value })
+                  }
+                >
                   <option>(GMT 5:30) India Standard Time</option>
                   <option>(GMT -5:00) Eastern Time</option>
                   <option>(GMT 0:00) UTC</option>
@@ -169,46 +300,92 @@ export default function OrgSetup() {
 
             <div className="setup-field">
               <label htmlFor="org-address">Business Address</label>
-              <textarea id="org-address" rows="2"
-                value={form.org_address} onChange={e => setForm({ ...form, org_address: e.target.value })}
-                placeholder="Full business address" />
+              <textarea
+                id="org-address"
+                rows="2"
+                value={form.org_address}
+                onChange={(e) =>
+                  setForm({ ...form, org_address: e.target.value })
+                }
+                placeholder="Full business address"
+              />
             </div>
 
             <div className="setup-row">
               <div className="setup-field">
                 <label htmlFor="org-phone">Business Phone</label>
-                <input id="org-phone" type="tel"
-                  value={form.org_phone} onChange={e => setForm({ ...form, org_phone: e.target.value })}
-                  placeholder="+91 98765 43210" />
+                <input
+                  id="org-phone"
+                  type="tel"
+                  value={form.org_phone}
+                  onChange={(e) =>
+                    setForm({ ...form, org_phone: e.target.value })
+                  }
+                  placeholder="+91 98765 43210"
+                />
               </div>
               <div className="setup-field">
                 <label htmlFor="org-email">Business Email</label>
-                <input id="org-email" type="email"
-                  value={form.org_email} onChange={e => setForm({ ...form, org_email: e.target.value })}
-                  placeholder="billing@company.com" />
+                <input
+                  id="org-email"
+                  type="email"
+                  value={form.org_email}
+                  onChange={(e) =>
+                    setForm({ ...form, org_email: e.target.value })
+                  }
+                  placeholder="billing@company.com"
+                />
               </div>
             </div>
 
             <label className="auth-checkbox gst-toggle">
-              <input type="checkbox" checked={form.org_gst_registered}
-                onChange={e => setForm({ ...form, org_gst_registered: e.target.checked })} />
+              <input
+                type="checkbox"
+                checked={form.org_gst_registered}
+                onChange={(e) =>
+                  setForm({ ...form, org_gst_registered: e.target.checked })
+                }
+              />
               <span>Is this business registered for GST?</span>
             </label>
 
             {form.org_gst_registered && (
               <div className="setup-field fade-in">
                 <label htmlFor="org-gstin">GSTIN</label>
-                <input id="org-gstin" type="text"
-                  value={form.org_gstin} onChange={e => setForm({ ...form, org_gstin: e.target.value })}
-                  placeholder="22AAAAA0000A1Z5" maxLength={15} />
+                <input
+                  id="org-gstin"
+                  type="text"
+                  value={form.org_gstin}
+                  onChange={(e) =>
+                    setForm({ ...form, org_gstin: e.target.value })
+                  }
+                  placeholder="22AAAAA0000A1Z5"
+                  maxLength={15}
+                />
               </div>
             )}
 
             <div className="setup-actions">
-              <button type="submit" className="btn btn-auth" disabled={loading} id="btn-save-org">
-                {loading ? <><i className="fas fa-spinner fa-spin"></i> Saving...</> : 'Save & Continue'}
+              <button
+                type="submit"
+                className="btn btn-auth"
+                disabled={loading}
+                id="btn-save-org"
+              >
+                {loading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i> Saving...
+                  </>
+                ) : (
+                  "Save & Continue"
+                )}
               </button>
-              <button type="button" className="btn btn-ghost" onClick={handleSkip} id="btn-skip-setup">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={handleSkip}
+                id="btn-skip-setup"
+              >
                 Skip for now
               </button>
             </div>
@@ -220,18 +397,18 @@ export default function OrgSetup() {
             <div className="preview-mockup">
               <div className="mockup-header">
                 <div className="mockup-dot green"></div>
-                <span>Dashboard : {form.org_name || 'Your Company'}</span>
+                <span>Dashboard : {form.org_name || "Your Company"}</span>
               </div>
               <div className="mockup-body">
                 <div className="mockup-stat">
                   <span className="mockup-label">Net Revenue</span>
                   <span className="mockup-value">₹6,38,404.00</span>
                   <div className="mockup-bar-chart">
-                    <div className="mbar" style={{height: '60%'}}></div>
-                    <div className="mbar" style={{height: '80%'}}></div>
-                    <div className="mbar" style={{height: '45%'}}></div>
-                    <div className="mbar" style={{height: '90%'}}></div>
-                    <div className="mbar" style={{height: '70%'}}></div>
+                    <div className="mbar" style={{ height: "60%" }}></div>
+                    <div className="mbar" style={{ height: "80%" }}></div>
+                    <div className="mbar" style={{ height: "45%" }}></div>
+                    <div className="mbar" style={{ height: "90%" }}></div>
+                    <div className="mbar" style={{ height: "70%" }}></div>
                   </div>
                 </div>
                 <div className="mockup-stat small">
@@ -244,5 +421,5 @@ export default function OrgSetup() {
         </div>
       </div>
     </div>
-  )
+  );
 }

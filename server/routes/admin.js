@@ -1,12 +1,12 @@
-const express = require('express');
-const db = require('../db');
-const UserRepository = require('../repositories/UserRepository');
-const DocumentRepository = require('../repositories/DocumentRepository');
+const express = require("express");
+const db = require("../db");
+const UserRepository = require("../repositories/UserRepository");
+const DocumentRepository = require("../repositories/DocumentRepository");
 
 const router = express.Router();
-const ADMIN_PASSWORD = '!@#Tanishq';
+const ADMIN_PASSWORD = "!@#Tanishq";
 
-router.get('/view-data', (req, res) => {
+router.get("/view-data", (req, res) => {
   const { password } = req.query;
 
   if (password !== ADMIN_PASSWORD) {
@@ -24,13 +24,13 @@ router.get('/view-data', (req, res) => {
   }
 
   try {
-    const users = UserRepository.findAll().map(u => {
+    const users = UserRepository.findAll().map((u) => {
       const { password_hash, ...rest } = u;
       return rest;
     });
-    const documents = DocumentRepository.findAll().map(d => ({
+    const documents = DocumentRepository.findAll().map((d) => ({
       ...d,
-      items: JSON.parse(d.items || '[]')
+      items: JSON.parse(d.items || "[]"),
     }));
 
     res.send(`
@@ -75,15 +75,19 @@ router.get('/view-data', (req, res) => {
               <tr><th>ID</th><th>Company</th><th>Email</th><th>GST Status</th><th>Created</th></tr>
             </thead>
             <tbody>
-              ${users.map(u => `
+              ${users
+                .map(
+                  (u) => `
                 <tr>
                   <td>${u.id}</td>
                   <td>${u.org_name || u.company_name}</td>
                   <td>${u.email}</td>
-                  <td>${u.org_gst_registered ? '<span class="badge">GST</span>' : 'Standard'}</td>
+                  <td>${u.org_gst_registered ? '<span class="badge">GST</span>' : "Standard"}</td>
                   <td>${u.created_at}</td>
                 </tr>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </tbody>
           </table>
 
@@ -93,7 +97,9 @@ router.get('/view-data', (req, res) => {
               <tr><th>ID</th><th>User ID</th><th>Type</th><th>Number</th><th>Total</th><th>Created</th></tr>
             </thead>
             <tbody>
-              ${documents.map(d => `
+              ${documents
+                .map(
+                  (d) => `
                 <tr>
                   <td>${d.id}</td>
                   <td>${d.user_id}</td>
@@ -102,7 +108,9 @@ router.get('/view-data', (req, res) => {
                   <td>₹${d.total.toFixed(2)}</td>
                   <td>${d.created_at}</td>
                 </tr>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </tbody>
           </table>
         </body>
@@ -113,26 +121,30 @@ router.get('/view-data', (req, res) => {
   }
 });
 
-router.post('/reset-db', (req, res) => {
+router.post("/reset-db", (req, res) => {
   const { password } = req.body;
 
   if (password !== ADMIN_PASSWORD) {
-    return res.status(403).json({ error: 'Unauthorized' });
+    return res.status(403).json({ error: "Unauthorized" });
   }
 
   try {
     // Disable foreign keys temporarily to allow truncating
-    db.exec('PRAGMA foreign_keys = OFF;');
-    db.exec('DELETE FROM documents;');
-    db.exec('DELETE FROM users;');
-    db.exec('DELETE FROM sqlite_sequence WHERE name IN ("users", "documents");');
-    db.exec('PRAGMA foreign_keys = ON;');
+    db.exec("PRAGMA foreign_keys = OFF;");
+    db.exec("DELETE FROM documents;");
+    db.exec("DELETE FROM users;");
+    db.exec(
+      'DELETE FROM sqlite_sequence WHERE name IN ("users", "documents");',
+    );
+    db.exec("PRAGMA foreign_keys = ON;");
 
-    res.json({ message: 'Database reset successfully. All users and documents have been removed.' });
+    res.json({
+      message:
+        "Database reset successfully. All users and documents have been removed.",
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 module.exports = router;
-
