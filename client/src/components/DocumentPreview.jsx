@@ -1,463 +1,328 @@
-import { forwardRef } from 'react'
+import { forwardRef, useImperativeHandle, useRef } from 'react'
 
 const DocumentPreview = forwardRef(({ user, data, subtotal, taxAmount, total }, ref) => {
+  const currencyMap = {
+    'INR': { locale: 'en-IN', code: 'INR', symbol: '₹', unit: 'Rupees', subUnit: 'Paise' },
+    'USD': { locale: 'en-US', code: 'USD', symbol: '$', unit: 'Dollars', subUnit: 'Cents' },
+    'EUR': { locale: 'de-DE', code: 'EUR', symbol: '€', unit: 'Euros', subUnit: 'Cents' },
+    'GBP': { locale: 'en-GB', code: 'GBP', symbol: '£', unit: 'Pounds', subUnit: 'Pence' },
+    'AED': { locale: 'ar-AE', code: 'AED', symbol: 'د.إ', unit: 'Dirhams', subUnit: 'Fils' }
+  };
+
+  const currentCurrency = currencyMap[data.currency || 'INR'];
+
   const fmt = (val) =>
-    new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val || 0)
+    new Intl.NumberFormat(currentCurrency.locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(val || 0)
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—'
     try {
       return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', {
-        day: '2-digit', month: '2-digit', year: 'numeric'
+        day: '2-digit', month: 'short', year: 'numeric'
       })
     } catch { return dateStr }
   }
 
-  // Split GST into CGST + SGST (intra-state) or show as IGST
+  // helper to convert number to words
+  const numberToWords = (num) => {
+    if (num === 0) return 'Zero';
+    const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const g = ['', 'Thousand', 'Million', 'Billion', 'Trillion', 'Quadrillion', 'Quintillion', 'Sextillion', 'Septillion', 'Octillion', 'Nonillion', 'Decillion'];
+    
+    const makeGroup = ([ones, tens, huns]) => {
+      return [
+        num > 0 && huns > 0 ? `${a[huns]} Hundred` : '',
+        [
+          tens > 1 ? b[tens] : a[10 * tens + ones],
+          tens > 1 && ones > 0 ? a[ones] : ''
+        ].join(' ')
+      ].join(' ');
+    };
+
+    const thousandArr = (n) => {
+      let r = [];
+      while (n > 0) {
+        r.push(n % 1000);
+        n = Math.floor(n / 1000);
+      }
+      return r;
+    };
+
+    const numArr = thousandArr(Math.floor(num));
+    let res = numArr.map((n, i) => {
+      if (n === 0) return '';
+      const ones = n % 10;
+      const tens = Math.floor((n % 100) / 10);
+      const huns = Math.floor(n / 100);
+      return `${makeGroup([ones, tens, huns])} ${g[i]}`;
+    }).reverse().join(' ').trim();
+
+    return res + ' ' + (currentCurrency.unit || 'Rupees') + ' Only';
+  };
+
+  const isPO = data.title === 'PURCHASE ORDER';
+  const isCN = data.title === 'CREDIT NOTE';
+  
   const discountAmount = subtotal * ((data.discount || 0) / 100)
   const taxableAmount = subtotal - discountAmount
-  const halfTax = (data.tax_rate || 0) / 2
-  const cgst = taxableAmount * (halfTax / 100)
-  const sgst = taxableAmount * (halfTax / 100)
+  const hasAnyDiscount = data.items.some(item => (item.discount || 0) > 0);
+  const hasAnyHSN = data.items.some(item => !!item.hsn);
 
-  const isPO = data.title === 'PURCHASE ORDER'
+  const themeColor = data.themeColor || (isCN ? '#800000' : '#0055d4')
+  const primaryBlue = themeColor
+  const borderColor = themeColor + '40' // 25% opacity for borders
 
-  // Amount in words
-  const numberToWords = (num) => {
-    if (num === 0) return 'Zero'
-    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
-      'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
-    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+  const headerRef = useRef(null);
+  const itemsRef = useRef(null);
+  const totalsRef = useRef(null);
+  const bankRef = useRef(null);
+  const footerRef = useRef(null);
 
-    const convert = (n) => {
-      if (n < 20) return ones[n]
-      if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '')
-      if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' and ' + convert(n % 100) : '')
-      if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '')
-      if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '')
-      return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '')
-    }
+  useImperativeHandle(ref, () => ({
+    scrollToHeader: () => headerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    scrollToItems: () => itemsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    scrollToTotals: () => totalsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    scrollToBank: () => bankRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    scrollToFooter: () => footerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }),
+    getDomElement: () => headerRef.current,
+  }));
 
-    const rupees = Math.floor(num)
-    const paise = Math.round((num - rupees) * 100)
-    let result = convert(rupees) + ' Rupees'
-    if (paise > 0) result += ' and ' + convert(paise) + ' Paise'
-    result += ' Only'
-    return result
-  }
-
-  const getDocTheme = () => {
-    const title = (data.title || '').toUpperCase()
-    if (title.includes('PURCHASE ORDER')) return 'theme-po'
-    if (title.includes('CREDIT NOTE')) return 'theme-cn'
-    if (title.includes('PROFORMA INVOICE')) return 'theme-pi'
-    return 'theme-inv' // Default invoice theme
-  }
-
-  const getPartyLabels = () => {
-    const title = (data.title || '').toUpperCase()
-    if (title.includes('PURCHASE ORDER')) {
-      return { from: 'From (Buyer)', to: 'Vendor Details (Seller)' }
-    }
-    if (title.includes('CREDIT NOTE')) {
-      return { from: 'From', to: 'Customer Details' }
-    }
-    return { from: 'From', to: 'Details of Receiver (Bill To)' }
-  }
-
-  const labels = getPartyLabels()
-
-  const isPOTheme = getDocTheme() === 'theme-po'
-
-  if (isPOTheme) {
-    return (
-      <div className={`tax-invoice ${getDocTheme()}`} ref={ref}>
-        {/* PO Header */}
-        <div className="ti-po-header">
-          <div className="ti-company-info">
-            {user?.org_logo && (
-              <img src={user.org_logo} alt="Logo" style={{ height: '60px', marginBottom: '10px' }} />
-            )}
-            <h2 style={{ color: '#0077c2', marginBottom: '5px' }}>{data.sender_name}</h2>
-            <p style={{ fontSize: '12px' }}>{data.sender_address}</p>
-            <p style={{ fontSize: '12px' }}>Phone: {data.sender_phone}</p>
-            {data.sender_email && <p style={{ fontSize: '12px' }}>{data.sender_email}</p>}
-          </div>
-          <div className="ti-po-right">
-            <h1 className="ti-po-title">PURCHASE ORDER</h1>
-            <div className="ti-po-meta">
-              <div className="ti-po-meta-row">
-                <span className="ti-po-meta-label">DATE</span>
-                <span className="ti-po-meta-val">{formatDate(data.date)}</span>
-              </div>
-              <div className="ti-po-meta-row">
-                <span className="ti-po-meta-label">PO #</span>
-                <span className="ti-po-meta-val">{data.doc_number || '—'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* PO Parties */}
-        <div className="ti-po-party-grid">
-          <div className="ti-po-box">
-            <div className="ti-po-box-header">VENDOR</div>
-            <div className="ti-po-box-content">
-              <strong>{data.client_name}</strong><br />
-              {data.client_contact && <>Attn: {data.client_contact}<br /></>}
-              {data.client_address}
-              {data.client_phone && <><br />Phone: {data.client_phone}</>}
-              {data.client_gstin && <><br />GSTIN: {data.client_gstin}</>}
-              {data.client_pan && <><br />PAN: {data.client_pan}</>}
-            </div>
-          </div>
-          <div className="ti-po-box">
-            <div className="ti-po-box-header">SHIP TO</div>
-            <div className="ti-po-box-content">
-              {data.use_diff_ship_to ? (
-                <>
-                  <strong>{data.ship_to_name}</strong><br />
-                  {data.ship_to_address}
-                  {data.ship_to_phone && <><br />Phone: {data.ship_to_phone}</>}
-                </>
+  return (
+    <div className="document-template" ref={headerRef} style={{
+      width: '100%',
+      maxWidth: '210mm',
+      background: 'white',
+      color: '#333',
+      padding: '10mm 12mm',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '10.5px',
+      lineHeight: '1.3',
+      boxSizing: 'border-box',
+      position: 'relative',
+      minHeight: '297mm',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" />
+      
+      {/* Header Section */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
+            <div style={{ width: '45px', height: '45px', background: data.logo_image ? 'transparent' : primaryBlue, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', overflow: 'hidden' }}>
+              {data.logo_image ? (
+                <img src={data.logo_image} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               ) : (
-                <>
-                  <strong>{data.sender_name}</strong><br />
-                  {data.sender_address}
-                  {data.sender_phone && <><br />Phone: {data.sender_phone}</>}
-                </>
+                <i className="fas fa-cube" style={{ fontSize: '20px' }}></i>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* PO Logistics */}
-        <div className="ti-po-logistics-bar">
-          <div className="ti-po-log-item">
-            <div className="ti-po-log-header">REQUISITIONER</div>
-            <div className="ti-po-log-val">{data.sales_person || '—'}</div>
-          </div>
-          <div className="ti-po-log-item">
-            <div className="ti-po-log-header">SHIP VIA</div>
-            <div className="ti-po-log-val">{data.transport_mode || '—'}</div>
-          </div>
-          <div className="ti-po-log-item">
-            <div className="ti-po-log-header">F.O.B.</div>
-            <div className="ti-po-log-val">{data.place_of_supply || '—'}</div>
-          </div>
-          <div className="ti-po-log-item">
-            <div className="ti-po-log-header">PAYMENT TERMS</div>
-            <div className="ti-po-log-val">{data.payment_terms || '—'}</div>
-          </div>
-        </div>
-
-        {/* PO Table */}
-        <table className="ti-table">
-          <thead>
-            <tr>
-              <th style={{ width: '15%' }}>ITEM CODE</th>
-              <th style={{ width: '40%' }}>DESCRIPTION</th>
-              <th style={{ width: '15%' }}>UNIT</th>
-              <th style={{ width: '15%' }}>UNIT PRICE</th>
-              <th style={{ width: '15%' }}>AMOUNT</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.items.map((item, index) => (
-              <tr key={index} style={{ minHeight: '30px' }}>
-                <td>{item.hsn || '—'}</td>
-                <td>{item.description}</td>
-                <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                <td style={{ textAlign: 'right' }}>{fmt(item.unit_price)}</td>
-                <td style={{ textAlign: 'right' }}>{fmt(item.quantity * item.unit_price)}</td>
-              </tr>
-            ))}
-            {/* Fill empty space to match image style */}
-            {[...Array(Math.max(0, 8 - data.items.length))].map((_, i) => (
-              <tr key={`empty-${i}`} style={{ height: '25px' }}>
-                <td></td><td></td><td></td><td></td><td></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* PO Footer */}
-        <div className="ti-po-footer-grid">
-          <div className="ti-po-instructions">
-            <div className="ti-po-box" style={{ minHeight: '80px' }}>
-              <div className="ti-po-box-header">Comments or Special Instructions</div>
-              <div className="ti-po-box-content">{data.notes || '—'}</div>
+            <div>
+              <h1 style={{ fontSize: '1.3rem', fontWeight: '900', color: '#1a1a1a', margin: 0, textTransform: 'uppercase' }}>{data.sender_name || 'YOUR COMPANY'}</h1>
+              {data.tagline && <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>{data.tagline}</p>}
             </div>
           </div>
-          <div className="ti-po-totals">
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 8px' }}>
-              <span>SUBTOTAL</span>
-              <span>{fmt(subtotal)}</span>
-            </div>
-            {data.discount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 8px' }}>
-                <span>DISCOUNT ({data.discount}%)</span>
-                <span>- {fmt((subtotal * data.discount) / 100)}</span>
-              </div>
-            )}
-            {taxAmount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 8px' }}>
-                <span>TAX</span>
-                <span>{fmt(taxAmount)}</span>
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 8px' }}>
-              <span>SHIPPING</span>
-              <span>—</span>
-            </div>
-            <div className="ti-po-total-line-final">
-              <span>TOTAL</span>
-              <span>₹ {fmt(total)}</span>
-            </div>
+          <div style={{ color: '#444', fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '3px' }}><i className="fas fa-map-marker-alt" style={{ color: primaryBlue, width: '10px', marginTop: '3px' }}></i> <span style={{ whiteSpace: 'pre-line' }}>{data.sender_address}</span></div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '3px' }}><i className="fas fa-phone-alt" style={{ color: primaryBlue, width: '10px' }}></i> <span>{data.sender_phone}</span></div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '3px' }}><i className="fas fa-envelope" style={{ color: primaryBlue, width: '10px' }}></i> <span>{data.sender_email}</span></div>
+            {data.sender_gstin && <div style={{ display: 'flex', gap: '8px', marginBottom: '3px' }}><i className="fas fa-id-card" style={{ color: primaryBlue, width: '10px' }}></i> <span>GSTIN : {data.sender_gstin}</span></div>}
           </div>
         </div>
-
-        {/* Signature & Branding */}
-        <div className="ti-signature" style={{ marginTop: '30px' }}>
-          <div className="ti-branding">
-            <p>Generated by <strong>DocuForge</strong></p>
-            <span>Professional Billing Suite</span>
+        <div style={{ textAlign: 'right' }}>
+          <h1 style={{ fontSize: '4rem', fontWeight: '900', color: primaryBlue, margin: '-5px 0 5px 0', lineHeight: '1', letterSpacing: '-1px', textTransform: 'uppercase' }}>
+            {data.title || 'INVOICE'}
+          </h1>
+          <div style={{ display: 'inline-grid', gridTemplateColumns: 'auto auto', gap: '5px 15px', fontSize: '0.9rem', textAlign: 'left', fontWeight: '500' }}>
+            <div style={{ fontWeight: '700' }}>{isPO ? 'PO Number' : (isCN ? 'Credit Note No.' : 'Invoice No.')}</div><div>: {data.doc_number}</div>
+            <div style={{ fontWeight: '700' }}>{isPO ? 'PO Date' : (isCN ? 'Credit Note Date' : 'Invoice Date')}</div><div>: {formatDate(data.date)}</div>
+            {isPO && <><div style={{ fontWeight: '700' }}>Expected Delivery</div><div>: {formatDate(data.expected_delivery_date)}</div></>}
+            {!isPO && !isCN && <><div style={{ fontWeight: '700' }}>Due Date</div><div>: {formatDate(data.due_date)}</div></>}
+            <div style={{ fontWeight: '700' }}>Payment Terms</div><div>: {data.payment_terms || 'Net 15 Days'}</div>
           </div>
-          <div className="ti-sig-block">
-            <p>For <strong>{data.sender_name || 'Your Company'}</strong></p>
-            <div className="ti-sig-line"></div>
-            <p>Authorized Signatory</p>
-          </div>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '30px', paddingBottom: '10px', fontSize: '11px', color: '#64748b' }}>
-          If you have any questions about this purchase order, please contact<br />
-          [{data.sender_name}, {data.sender_phone}, {data.sender_email}]
         </div>
       </div>
-    )
-  }
 
-  // Fallback to original Tax Invoice layout
-  return (
-    <div className={`tax-invoice ${getDocTheme()}`} ref={ref}>
-      {/* Header */}
-      <div className="ti-header">
-        <div className="ti-company">
-          {user?.org_logo ? (
-            <div className="ti-logo-container">
-              <img src={user.org_logo} alt="Company Logo" className="ti-logo-img" />
-            </div>
-          ) : (
-            <div className="ti-logo">
-              {(data.sender_name || 'C')[0].toUpperCase()}
-            </div>
-          )}
-          <div className="ti-company-info">
-            <h2 className="ti-company-name">{data.sender_name || 'Your Company'}</h2>
-            <p className="ti-role-label" style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>
-              {labels.from}
+      <div style={{ height: '1.5px', background: '#eee', marginBottom: '20px' }}></div>
+
+      {/* Bill To / Ship To Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <div style={{ border: `1px solid ${borderColor}`, borderRadius: '10px', overflow: 'hidden' }}>
+          <div style={{ background: primaryBlue, color: 'white', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', fontSize: '0.8rem' }}>
+            <i className="fas fa-user" style={{ fontSize: '0.75rem' }}></i> {isPO ? 'BUYER (BILL TO)' : (isCN ? 'SELLER (FROM)' : 'BILL TO')}
+          </div>
+          <div style={{ padding: '8px 12px', fontSize: '0.9rem' }}>
+            <h3 style={{ margin: '0 0 3px 0', fontSize: '1rem', fontWeight: '800' }}>{(isPO || isCN) ? data.sender_name : data.client_name}</h3>
+            <p style={{ margin: '0 0 3px 0', color: '#444', whiteSpace: 'pre-line' }}>{(isPO || isCN) ? data.sender_address : data.client_address}</p>
+            {data.client_phone && <p style={{ margin: '0', color: '#666' }}>Phone : {data.client_phone}</p>}
+            {data.client_email && <p style={{ margin: '0', color: '#666' }}>Email : {data.client_email}</p>}
+            {data.client_gstin && <p style={{ margin: '0', fontWeight: '700' }}>GSTIN : {data.client_gstin}</p>}
+          </div>
+        </div>
+        
+        <div style={{ border: `1px solid ${borderColor}`, borderRadius: '10px', overflow: 'hidden' }}>
+          <div style={{ background: primaryBlue, color: 'white', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', fontSize: '0.8rem' }}>
+            <i className="fas fa-truck" style={{ fontSize: '0.75rem' }}></i> {isPO ? 'VENDOR (SUPPLIER)' : (isCN ? 'CUSTOMER (TO)' : 'SHIP TO')}
+          </div>
+          <div style={{ padding: '8px 12px', fontSize: '0.9rem' }}>
+            <h3 style={{ margin: '0 0 3px 0', fontSize: '1rem', fontWeight: '800' }}>
+              {(isPO || isCN) ? data.client_name : (data.different_shipping ? data.shipping_name : data.client_name)}
+            </h3>
+            <p style={{ margin: '0 0 3px 0', color: '#444', whiteSpace: 'pre-line' }}>
+              {(isPO || isCN) ? data.client_address : (data.different_shipping ? data.shipping_address : data.client_address)}
             </p>
-            {data.sender_address ? <p>{data.sender_address}</p> : null}
-            {data.sender_email ? <p>{data.sender_email}</p> : null}
-            {data.sender_phone ? <p>{data.sender_phone}</p> : null}
-            {data.sender_gstin ? <p><strong>GSTIN: {data.sender_gstin}</strong></p> : null}
-            {data.sender_state ? <p>State: {data.sender_state}</p> : null}
-            {data.sender_pan ? <p>PAN: {data.sender_pan}</p> : null}
+            {data.different_shipping ? (
+              <>
+                {data.shipping_phone && <p style={{ margin: '0', color: '#666' }}>Phone : {data.shipping_phone}</p>}
+                {data.shipping_gstin && <p style={{ margin: '0', fontWeight: '700' }}>GSTIN : {data.shipping_gstin}</p>}
+                {data.shipping_state_code && <p style={{ margin: '0', color: '#666' }}>State Code : {data.shipping_state_code}</p>}
+              </>
+            ) : (
+              <>
+                {data.client_phone && <p style={{ margin: '0', color: '#666' }}>Phone : {data.client_phone}</p>}
+                {data.client_gstin && <p style={{ margin: '0', fontWeight: '700' }}>GSTIN : {data.client_gstin}</p>}
+                {data.client_state_code && <p style={{ margin: '0', color: '#666' }}>State Code : {data.client_state_code}</p>}
+              </>
+            )}
           </div>
-        </div>
-        <div className="ti-title-block">
-          <h1 className="ti-title">{data.title || 'TAX INVOICE'}</h1>
-          <p className="ti-number">{data.doc_number}</p>
-        </div>
-      </div>
-
-      {/* Meta Grid */}
-      <div className="ti-meta-grid">
-        <div className="ti-meta-row">
-          <div className="ti-meta-cell">
-            <span className="ti-label">{(data.title || '').includes('PURCHASE') ? 'P.O. Date' : 'Invoice Date'}</span>
-            <span className="ti-value">{formatDate(data.date)}</span>
-          </div>
-          <div className="ti-meta-cell">
-            <span className="ti-label">Due Date</span>
-            <span className="ti-value">{formatDate(data.due_date)}</span>
-          </div>
-        </div>
-        <div className="ti-meta-row">
-          <div className="ti-meta-cell">
-            <span className="ti-label">Terms</span>
-            <span className="ti-value">{data.payment_terms || 'Net 30'}</span>
-          </div>
-          <div className="ti-meta-cell">
-            <span className="ti-label">Place of Supply</span>
-            <span className="ti-value">{data.place_of_supply || '—'}</span>
-          </div>
-        </div>
-        <div className="ti-meta-row">
-          <div className="ti-meta-cell">
-            <span className="ti-label">Shipping Date</span>
-            <span className="ti-value">{formatDate(data.shipping_date) || '—'}</span>
-          </div>
-          <div className="ti-meta-cell">
-            <span className="ti-label">Transport Mode</span>
-            <span className="ti-value">{data.transport_mode || '—'}</span>
-          </div>
-        </div>
-        <div className="ti-meta-row">
-          <div className="ti-meta-cell">
-            <span className="ti-label">Vehicle Number</span>
-            <span className="ti-value">{data.vehicle_number || '—'}</span>
-          </div>
-          <div className="ti-meta-cell">
-            <span className="ti-label">Sales Person</span>
-            <span className="ti-value">{data.sales_person || '—'}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Bill To / Ship To */}
-      <div className="ti-parties">
-        <div className="ti-party">
-          <div className="ti-party-label">{labels.to}</div>
-          <h3>{data.client_name || 'Client Name'}</h3>
-          {data.client_contact ? <p>Attn: {data.client_contact}</p> : null}
-          {data.client_address ? <p>{data.client_address}</p> : null}
-          {data.client_email ? <p>{data.client_email}</p> : null}
-          {data.client_phone ? <p>Phone: {data.client_phone}</p> : null}
-          {data.client_gstin ? <p><strong>GSTIN: {data.client_gstin}</strong></p> : null}
-          {data.client_state ? <p>State: {data.client_state}</p> : null}
-        </div>
-        <div className="ti-party">
-          <div className="ti-party-label">Details of Consignee (Ship To)</div>
-          <h3>{data.ship_to_name || data.client_name || 'Same as Billing'}</h3>
-          <p>{data.ship_to_address || data.client_address || '—'}</p>
         </div>
       </div>
 
       {/* Items Table */}
-      <table className="ti-table">
+      <table ref={itemsRef} style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
         <thead>
-          <tr>
-            <th style={{ width: '5%' }}>#</th>
-            <th style={{ width: '45%' }}>Item & Description</th>
-            <th style={{ width: '10%' }}>HSN/SAC</th>
-            <th style={{ width: '10%' }}>Qty/Unit</th>
-            <th style={{ width: '15%' }}>Rate</th>
-            <th style={{ width: '15%' }}>Amount</th>
+          <tr style={{ background: primaryBlue, color: 'white' }}>
+            <th style={{ padding: '8px', textAlign: 'left', border: `1px solid ${primaryBlue}` }}>S.No.</th>
+            <th style={{ padding: '8px', textAlign: 'left', border: `1px solid ${primaryBlue}`, width: hasAnyHSN ? '40%' : '50%' }}>Item Description</th>
+            {hasAnyHSN && <th style={{ padding: '8px', textAlign: 'center', border: `1px solid ${primaryBlue}` }}>HSN/SAC</th>}
+            <th style={{ padding: '8px', textAlign: 'center', border: `1px solid ${primaryBlue}` }}>Qty</th>
+            <th style={{ padding: '8px', textAlign: 'right', border: `1px solid ${primaryBlue}` }}>Rate ({currentCurrency.symbol})</th>
+            {hasAnyDiscount && <th style={{ padding: '8px', textAlign: 'center', border: `1px solid ${primaryBlue}` }}>Disc %</th>}
+            <th style={{ padding: '8px', textAlign: 'right', border: `1px solid ${primaryBlue}` }}>Amount ({currentCurrency.symbol})</th>
           </tr>
         </thead>
         <tbody>
           {data.items.map((item, index) => (
-            <tr key={index}>
-              <td>{index + 1}</td>
-              <td>
-                <strong>{item.description || '—'}</strong>
-                {item.hsn && <div className="ti-hsn-inline">{item.hsn}</div>}
-              </td>
-              <td>{item.hsn || '—'}</td>
-              <td>{item.quantity} {item.unit}</td>
-              <td>₹{fmt(item.unit_price)}</td>
-              <td>₹{fmt(item.quantity * item.unit_price)}</td>
+            <tr key={index} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+              <td style={{ padding: '8px', border: '1px solid #eee', textAlign: 'center' }}>{index + 1}</td>
+              <td style={{ padding: '8px', border: '1px solid #eee' }}>{item.description}</td>
+              {hasAnyHSN && <td style={{ padding: '8px', border: '1px solid #eee', textAlign: 'center' }}>{item.hsn || '—'}</td>}
+              <td style={{ padding: '8px', border: '1px solid #eee', textAlign: 'center' }}>{item.quantity} {item.unit}</td>
+              <td style={{ padding: '8px', border: '1px solid #eee', textAlign: 'right' }}>{fmt(item.unit_price)}</td>
+              {hasAnyDiscount && <td style={{ padding: '8px', border: '1px solid #eee', textAlign: 'center' }}>{item.discount}%</td>}
+              <td style={{ padding: '8px', border: '1px solid #eee', textAlign: 'right' }}>{fmt(item.quantity * item.unit_price * (1 - (item.discount || 0) / 100))}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Totals + Amount in Words */}
-      <div className="ti-footer-grid">
-        <div className="ti-words">
-          <div className="ti-label">Total Invoice Amount in Words</div>
-          <p className="ti-amount-words"><strong>{numberToWords(total)}</strong></p>
-
-          {(data.bank_name || data.bank_account) && (
-            <>
-              <div className="ti-label" style={{ marginTop: '15px' }}>Bank Details</div>
-              <table className="ti-bank-table">
-                <tbody>
-                  {data.bank_name && <tr><td>Name</td><td>: {data.bank_name}</td></tr>}
-                  {data.bank_account && <tr><td>A/C No.</td><td>: {data.bank_account}</td></tr>}
-                  {data.bank_ifsc && <tr><td>IFSC Code</td><td>: {data.bank_ifsc}</td></tr>}
-                  {data.bank_branch && <tr><td>Branch</td><td>: {data.bank_branch}</td></tr>}
-                </tbody>
-              </table>
-            </>
-          )}
+      {/* Totals Section */}
+      <div ref={totalsRef} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginBottom: '20px', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <div>
+          <div style={{ border: `1px solid ${borderColor}`, borderRadius: '10px', padding: '10px 12px', background: '#f8fbff', minHeight: '60px' }}>
+            <h4 style={{ margin: '0 0 5px 0', fontSize: '0.85rem', fontWeight: '800', color: primaryBlue }}>Amount in Words</h4>
+            <p style={{ fontSize: '0.9rem', color: '#333', margin: 0, fontWeight: '700' }}>{numberToWords(total)}</p>
+          </div>
         </div>
-        <div className="ti-totals">
-          <div className="ti-total-row">
-            <span>Sub Total</span>
-            <span>₹{fmt(subtotal)}</span>
-          </div>
-          {data.discount > 0 && (
-            <div className="ti-total-row">
-              <span>Discount ({data.discount}%)</span>
-              <span>-₹{fmt(subtotal * (data.discount / 100))}</span>
+        <div>
+          <div style={{ background: '#f8fbff', borderRadius: '10px', border: `1px solid ${borderColor}` }}>
+            <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
+                <span style={{ color: '#666' }}>Subtotal</span>
+                <span style={{ fontWeight: '700' }}>{currentCurrency.symbol} {fmt(subtotal)}</span>
+              </div>
+              {taxAmount > 0 && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
+                    <span style={{ color: '#666' }}>CGST ({(data.tax_rate/2).toFixed(1)}%)</span>
+                    <span style={{ fontWeight: '700' }}>{currentCurrency.symbol} {fmt(taxAmount / 2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
+                    <span style={{ color: '#666' }}>SGST ({(data.tax_rate/2).toFixed(1)}%)</span>
+                    <span style={{ fontWeight: '700' }}>{currentCurrency.symbol} {fmt(taxAmount / 2)}</span>
+                  </div>
+                </>
+              )}
+              {/* Additional Charges */}
+              {(data.additional_charges || []).map((charge, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
+                  <span style={{ color: '#666' }}>{charge.label || 'Additional Charge'}</span>
+                  <span style={{ fontWeight: '700', color: parseFloat(charge.amount) < 0 ? '#d32f2f' : '#333' }}>
+                    {parseFloat(charge.amount) < 0 ? '- ' : ''}{currentCurrency.symbol} {fmt(Math.abs(parseFloat(charge.amount) || 0))}
+                  </span>
+                </div>
+              ))}
             </div>
-          )}
-          {data.tax_rate > 0 && (
-            user?.org_gst_registered ? (
-              <>
-                <div className="ti-total-row">
-                  <span>CGST ({(data.tax_rate / 2)}%)</span>
-                  <span>₹{fmt(taxAmount / 2)}</span>
-                </div>
-                <div className="ti-total-row">
-                  <span>SGST ({(data.tax_rate / 2)}%)</span>
-                  <span>₹{fmt(taxAmount / 2)}</span>
-                </div>
-              </>
+            <div style={{ background: primaryBlue, color: 'white', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px -12px -12px -12px', borderRadius: '0 0 10px 10px' }}>
+              <span style={{ fontWeight: '900', fontSize: '1.1rem' }}>GRAND TOTAL</span>
+              <span style={{ fontWeight: '900', fontSize: '1.1rem' }}>{currentCurrency.symbol} {fmt(total)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Section */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginBottom: '15px', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <div ref={bankRef} style={{ border: `1px solid ${borderColor}`, borderRadius: '10px', overflow: 'hidden' }}>
+          <div style={{ background: '#f8fbff', color: primaryBlue, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800', fontSize: '0.8rem', borderBottom: `1px solid ${borderColor}` }}>
+            <i className="fas fa-university" style={{ fontSize: '0.75rem' }}></i> PAYMENT DETAILS
+          </div>
+          <div style={{ padding: '8px 12px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 15px', fontSize: '0.9rem' }}>
+            <div style={{ color: '#666', fontWeight: '600' }}>Bank Name</div><div>: {data.bank_name || '—'}</div>
+            <div style={{ color: '#666', fontWeight: '600' }}>A/C Number</div><div>: {data.bank_account || '—'}</div>
+            <div style={{ color: '#666', fontWeight: '600' }}>IFSC Code</div><div>: {data.bank_ifsc || '—'}</div>
+            <div style={{ color: '#666', fontWeight: '600' }}>UPI ID</div><div>: {data.upi_id || '—'}</div>
+          </div>
+        </div>
+        <div style={{ border: `1px solid ${borderColor}`, borderRadius: '10px', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: '15px', padding: '8px 12px' }}>
+          <div style={{ width: '60px', height: '60px', border: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: '6px' }}>
+            {data.qr_code_image ? (
+              <img src={data.qr_code_image} alt="QR Code" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             ) : (
-              data.show_tax_field ? (
-                <div className="ti-total-row">
-                  <span>Tax ({data.tax_rate}%)</span>
-                  <span>₹{fmt(taxAmount)}</span>
-                </div>
-              ) : null
-            )
-          )}
-          <div className="ti-total-row ti-grand-total">
-            <span>Total</span>
-            <span>₹{fmt(total)}</span>
+              <div style={{ textAlign: 'center' }}><i className="fas fa-qrcode" style={{ fontSize: '30px', color: '#ccc' }}></i></div>
+            )}
           </div>
-          <div className={`ti-total-row ${data.payment_status !== 'paid' ? 'ti-balance' : ''}`}>
-            <span>Balance Due</span>
-            <span>₹{fmt(data.payment_status === 'paid' ? 0 : total)}</span>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: primaryBlue, marginBottom: '2px' }}>Scan & Pay (UPI)</div>
+            <div style={{ fontSize: '0.85rem', color: '#555', fontWeight: '600' }}>{data.upi_id || '—'}</div>
           </div>
-          {data.payment_status === 'paid' && (
-            <div className="ti-total-row" style={{ color: '#10b981', fontWeight: '900', fontSize: '0.85rem', paddingTop: '8px', borderTop: '1px dashed #cbd5e1', marginTop: '4px' }}>
-              <span>PAYMENT STATUS</span>
-              <span>PAID</span>
-            </div>
+        </div>
+      </div>
+
+      {/* Footer Area: Terms & Conditions and Notes */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginTop: 'auto', borderTop: '1px solid #eee', paddingTop: '12px', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <div>
+          <h4 style={{ margin: '0 0 5px 0', fontSize: '0.9rem', fontWeight: '800', color: primaryBlue }}>Terms & Conditions</h4>
+          <div style={{ fontSize: '0.8rem', color: '#555', whiteSpace: 'pre-line', lineHeight: '1.3' }}>
+            {data.terms || `1. Payment to be made within the due date mentioned above.\n2. Late payments may attract interest charges.\n3. Goods once sold will not be taken back.`}
+          </div>
+        </div>
+        <div>
+          {data.notes && (
+            <>
+              <h4 style={{ margin: '0 0 5px 0', fontSize: '0.9rem', fontWeight: '800', color: primaryBlue }}>Notes</h4>
+              <div style={{ fontSize: '0.8rem', color: '#555', whiteSpace: 'pre-line', lineHeight: '1.3' }}>
+                {data.notes}
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      {/* Terms */}
-      {data.terms ? (
-        <div className="ti-terms">
-          <div className="ti-label">Terms &amp; Conditions</div>
-          <p>{data.terms}</p>
+      <div style={{ borderTop: '1.2px solid #eee', marginTop: '15px', paddingTop: '15px', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ textAlign: 'center', width: '180px' }}>
+             <div style={{ height: '30px' }}></div>
+             <div style={{ borderTop: '1px solid #333', paddingTop: '3px', fontSize: '0.85rem', fontWeight: '800' }}>Authorized Signature</div>
+          </div>
         </div>
-      ) : null}
+      </div>
 
-      {data.notes ? (
-        <div className="ti-notes-footer">
-          <p><em>{data.notes}</em></p>
-        </div>
-      ) : null}
-
-      {/* Signature */}
-      <div className="ti-signature">
-        <div className="ti-branding">
-          <p>Generated by <strong>DocuForge</strong></p>
-          <span>Professional Billing Suite</span>
-        </div>
-        <div className="ti-sig-block">
-          <p>For <strong>{data.sender_name || 'Your Company'}</strong></p>
-          <div className="ti-sig-line"></div>
-          <p>Authorized Signatory</p>
-        </div>
+      <div ref={footerRef} style={{ position: 'absolute', bottom: '8px', left: 0, right: 0, textAlign: 'center', fontSize: '0.65rem', color: '#ccc' }}>
+        Generated using <strong>DOCUFORGE</strong>
       </div>
     </div>
   )

@@ -22,6 +22,9 @@ export default function OrgSetup() {
     org_email: user?.email || "",
     org_industry: "",
     org_logo: "",
+    org_bank_name: "",
+    org_bank_account: "",
+    org_bank_ifsc: "",
   });
 
   const states = [
@@ -364,6 +367,30 @@ export default function OrgSetup() {
                 />
               </div>
             )}
+
+            <div className="setup-bank-section" style={{ borderTop: '1px solid #eee', marginTop: '20px', paddingTop: '10px' }}>
+              <h3 style={{ fontSize: '1rem', marginBottom: '15px', color: 'var(--clr-primary)' }}>Bank Details (Optional)</h3>
+              <div className="setup-field">
+                <label>Bank Name</label>
+                <input type="text" value={form.org_bank_name} 
+                  onChange={e => setForm({ ...form, org_bank_name: e.target.value })} 
+                  placeholder="e.g. State Bank of India" />
+              </div>
+              <div className="setup-row">
+                <div className="setup-field">
+                  <label>Account Number</label>
+                  <input type="text" value={form.org_bank_account} 
+                    onChange={e => setForm({ ...form, org_bank_account: e.target.value })} 
+                    placeholder="XXXX XXXX XXXX" />
+                </div>
+                <div className="setup-field">
+                  <label>IFSC Code</label>
+                  <input type="text" value={form.org_bank_ifsc} 
+                    onChange={e => setForm({ ...form, org_bank_ifsc: e.target.value })} 
+                    placeholder="SBIN0001234" />
+                </div>
+              </div>
+            </div>
 
             <div className="setup-actions">
               <button

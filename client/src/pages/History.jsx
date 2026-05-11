@@ -133,10 +133,17 @@ export default function History() {
     }
   };
 
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat("en-IN", {
+  const formatCurrency = (val, currency = "INR") => {
+    const currencyMap = {
+      INR: "en-IN",
+      USD: "en-US",
+      EUR: "de-DE",
+      GBP: "en-GB",
+      AED: "ar-AE",
+    };
+    return new Intl.NumberFormat(currencyMap[currency] || "en-IN", {
       style: "currency",
-      currency: "INR",
+      currency: currency,
     }).format(val || 0);
   };
 
@@ -278,8 +285,8 @@ export default function History() {
             <i className="fas fa-rupee-sign"></i>
           </div>
           <div className="stat-info">
-            <span className="stat-value">{formatCurrency(totalValue)}</span>
-            <span className="stat-label">Total Document Value</span>
+            <span className="stat-value">{formatCurrency(totalValue, "INR")}</span>
+            <span className="stat-label">Total Document Value (INR)</span>
           </div>
         </div>
         <div className="stat-card" id="stat-paid">
@@ -287,8 +294,8 @@ export default function History() {
             <i className="fas fa-check-circle"></i>
           </div>
           <div className="stat-info">
-            <span className="stat-value">{formatCurrency(paidValue)}</span>
-            <span className="stat-label">Total Paid</span>
+            <span className="stat-value">{formatCurrency(paidValue, "INR")}</span>
+            <span className="stat-label">Total Paid (INR)</span>
           </div>
         </div>
         <div className="stat-card" id="stat-unpaid">
@@ -450,7 +457,7 @@ export default function History() {
                       {doc.payment_status === "paid" ? "Paid" : "Unpaid"}
                     </span>
                   </td>
-                  <td className="total-cell">{formatCurrency(doc.total)}</td>
+                  <td className="total-cell">{formatCurrency(doc.total, doc.currency)}</td>
                   <td>
                     <button
                       className="btn-icon btn-view"

@@ -70,6 +70,7 @@ db.exec(`
     bank_account TEXT DEFAULT '',
     bank_ifsc TEXT DEFAULT '',
     bank_branch TEXT DEFAULT '',
+    currency TEXT DEFAULT 'INR',
     payment_status TEXT DEFAULT 'unpaid',
     payment_method TEXT DEFAULT '',
     transaction_id TEXT DEFAULT '',
@@ -126,9 +127,22 @@ const newColumns = [
   ["documents", "payment_status", "TEXT DEFAULT 'unpaid'"],
   ["documents", "payment_method", "TEXT DEFAULT ''"],
   ["documents", "transaction_id", "TEXT DEFAULT ''"],
+  ["documents", "currency", "TEXT DEFAULT 'INR'"],
   ["users", "org_industry", "TEXT DEFAULT ''"],
   ["users", "org_logo", "TEXT DEFAULT ''"],
+  ["users", "org_bank_name", "TEXT DEFAULT ''"],
+  ["users", "org_bank_account", "TEXT DEFAULT ''"],
+  ["users", "org_bank_ifsc", "TEXT DEFAULT ''"],
+  ["users", "org_bank_branch", "TEXT DEFAULT ''"],
+  ["users", "org_tagline", "TEXT DEFAULT ''"],
+  ["users", "org_website", "TEXT DEFAULT ''"],
+  ["users", "org_upi_id", "TEXT DEFAULT ''"],
+  ["users", "org_qr_code", "TEXT DEFAULT ''"],
+  ["users", "org_theme_color", "TEXT DEFAULT '#0055d4'"],
 ];
+
+// Relax password_hash constraint if needed (SQLite doesn't support ALTER COLUMN easily, 
+// but we can just stop requiring it in our logic)
 
 for (const [table, col, type] of newColumns) {
   try {

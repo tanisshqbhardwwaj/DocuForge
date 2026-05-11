@@ -6,6 +6,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import Dashboard from "./pages/Dashboard";
 import Generator from "./pages/Generator";
 import History from "./pages/History";
 import Login from "./pages/Login";
@@ -73,10 +74,10 @@ function AppLayout() {
       <WelcomeModal user={user} onStartTour={() => setShowTour(true)} />
       {showTour && <GuidedTour onComplete={() => setShowTour(false)} />}
       <nav className="navbar" id="main-navbar">
-        <div className="nav-brand">
+        <NavLink to="/" className="nav-brand" end id="nav-logo-brand">
           <i className="fas fa-file-invoice"></i>
           <span>DocuForge</span>
-        </div>
+        </NavLink>
         <div className="nav-center">
           <NavLink
             to="/"
@@ -84,10 +85,20 @@ function AppLayout() {
             className={({ isActive }) =>
               isActive ? "nav-link active" : "nav-link"
             }
+            id="nav-dashboard"
+          >
+            <i className="fas fa-th-large"></i>
+            <span>Dashboard</span>
+          </NavLink>
+          <NavLink
+            to="/create"
+            className={({ isActive }) =>
+              isActive ? "nav-link active" : "nav-link"
+            }
             id="nav-generator"
           >
             <i className="fas fa-plus-circle"></i>
-            <span>New Document</span>
+            <span>Create</span>
           </NavLink>
           <NavLink
             to="/history"
@@ -97,7 +108,7 @@ function AppLayout() {
             id="nav-history"
           >
             <i className="fas fa-history"></i>
-            <span>Document History</span>
+            <span>History</span>
           </NavLink>
         </div>
         <div className="nav-user">
@@ -121,7 +132,8 @@ function AppLayout() {
       </nav>
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<Generator />} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/create" element={<Generator />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>

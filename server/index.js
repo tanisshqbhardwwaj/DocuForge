@@ -1,6 +1,7 @@
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -9,10 +10,25 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
+// Request logger
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/documents", require("./routes/documents"));
 app.use("/api/admin", require("./routes/admin"));
+
+// Root route
+app.get("/", (req, res) => {
+  res.json({
+    message: "DocuForge API Server is running",
+    version: "1.0.0",
+    docs: "/api/health",
+  });
+});
 
 // Health check
 app.get("/api/health", (req, res) => {

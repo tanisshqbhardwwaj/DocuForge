@@ -26,7 +26,6 @@ export function AuthProvider({ children }) {
         const data = await res.json();
         setUser(data);
       } else {
-        // Token invalid
         logout();
       }
     } catch {
@@ -60,9 +59,6 @@ export function AuthProvider({ children }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Signup failed");
 
-    localStorage.removeItem("df_visited");
-    sessionStorage.removeItem("df_session_v2");
-
     localStorage.setItem("docuforge_token", data.token);
     setToken(data.token);
     setUser(data.user);
@@ -90,7 +86,6 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  // Helper for authenticated API calls
   const authFetch = (url, options = {}) => {
     return fetch(`${API_BASE}${url}`, {
       ...options,

@@ -33,7 +33,10 @@ class UserRepository {
         org_currency = ?, org_fiscal_year = ?, org_language = ?,
         org_timezone = ?, org_gst_registered = ?, org_gstin = ?,
         org_address = ?, org_phone = ?, org_email = ?,
-        org_industry = ?, org_logo = ?
+        org_industry = ?, org_logo = ?,
+        org_bank_name = ?, org_bank_account = ?, org_bank_ifsc = ?,
+        org_bank_branch = ?, org_tagline = ?, org_website = ?,
+        org_upi_id = ?, org_qr_code = ?, org_theme_color = ?
       WHERE id = ?
     `,
       )
@@ -52,6 +55,15 @@ class UserRepository {
         d.org_email || "",
         d.org_industry || "",
         d.org_logo || "",
+        d.org_bank_name || "",
+        d.org_bank_account || "",
+        d.org_bank_ifsc || "",
+        d.org_bank_branch || "",
+        d.org_tagline || "",
+        d.org_website || "",
+        d.org_upi_id || "",
+        d.org_qr_code || "",
+        d.org_theme_color || "#0055d4",
         userId,
       );
   }

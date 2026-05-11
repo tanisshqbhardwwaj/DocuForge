@@ -26,12 +26,6 @@ export default function Signup() {
       return;
     }
 
-    const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
-    if (form.phone && !phoneRegex.test(form.phone)) {
-      setError("Please enter a valid phone number (digits only)");
-      return;
-    }
-
     if (!form.agree) {
       setError("Please agree to the Terms of Service");
       return;
@@ -40,8 +34,6 @@ export default function Signup() {
     setLoading(true);
     try {
       await signup(form.company_name, form.email, form.phone, form.password);
-      localStorage.removeItem("df_visited"); // Ensure tour shows for new users
-      sessionStorage.removeItem("df_session_v2");
       navigate("/setup");
     } catch (err) {
       setError(err.message);

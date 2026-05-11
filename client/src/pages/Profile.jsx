@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Toast from "../components/Toast";
+import ImageCropper from "../components/ImageCropper";
 
 export default function Profile() {
   const { user, saveOrganization, authFetch } = useAuth();
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [cropTarget, setCropTarget] = useState(null); // 'logo' | 'qr'
+  const [tempImage, setTempImage] = useState(null);
   const [form, setForm] = useState({
     org_name: "",
     org_industry: "",
@@ -18,6 +22,14 @@ export default function Profile() {
     org_phone: "",
     org_email: "",
     org_logo: "",
+    org_bank_name: "",
+    org_bank_account: "",
+    org_bank_ifsc: "",
+    org_bank_branch: "",
+    org_tagline: "",
+    org_website: "",
+    org_upi_id: "",
+    org_qr_code: "",
   });
 
   useEffect(() => {
@@ -35,6 +47,14 @@ export default function Profile() {
         org_phone: user.org_phone || user.phone || "",
         org_email: user.org_email || user.email || "",
         org_logo: user.org_logo || "",
+        org_bank_name: user.org_bank_name || "",
+        org_bank_account: user.org_bank_account || "",
+        org_bank_ifsc: user.org_bank_ifsc || "",
+        org_bank_branch: user.org_bank_branch || "",
+        org_tagline: user.org_tagline || "",
+        org_website: user.org_website || "",
+        org_upi_id: user.org_upi_id || "",
+        org_qr_code: user.org_qr_code || "",
       });
     }
   }, [user]);
@@ -84,13 +104,27 @@ export default function Profile() {
     }
   };
 
-  const handleLogoChange = (e) => {
+  const handleFileChange = (e, target) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setForm({ ...form, org_logo: reader.result });
+      reader.onloadend = () => {
+        setTempImage(reader.result);
+        setCropTarget(target);
+        setShowCropper(true);
+      };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCropComplete = (croppedImage) => {
+    if (cropTarget === 'logo') {
+      setForm({ ...form, org_logo: croppedImage });
+    } else {
+      setForm({ ...form, org_qr_code: croppedImage });
+    }
+    setShowCropper(false);
+    setTempImage(null);
   };
 
   return (
@@ -109,37 +143,75 @@ export default function Profile() {
             <h3 className="section-title">
               <i className="fas fa-image"></i> Business Branding
             </h3>
-            <div className="logo-edit-wrapper">
-              <div className="logo-preview-large">
-                {form.org_logo ? (
-                  <img src={form.org_logo} alt="Logo" />
-                ) : (
-                  <div className="logo-placeholder">
-                    <i className="fas fa-building"></i>
-                    <span>No Logo</span>
-                  </div>
-                )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+              {/* Logo Area */}
+              <div className="logo-edit-wrapper">
+                <div className="logo-preview-large">
+                  {form.org_logo ? (
+                    <img src={form.org_logo} alt="Logo" />
+                  ) : (
+                    <div className="logo-placeholder">
+                      <i className="fas fa-building"></i>
+                      <span>No Logo</span>
+                    </div>
+                  )}
+                </div>
+                <div className="logo-controls">
+                  <label className="btn btn-secondary btn-sm">
+                    <i className="fas fa-upload"></i> {form.org_logo ? 'Change Logo' : 'Upload Logo'}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'logo')}
+                    />
+                  </label>
+                  {form.org_logo && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm text-danger"
+                      onClick={() => setForm({ ...form, org_logo: "" })}
+                    >
+                      <i className="fas fa-trash"></i> Remove
+                    </button>
+                  )}
+                  <p className="field-hint">Used in document header</p>
+                </div>
               </div>
-              <div className="logo-controls">
-                <label className="btn btn-secondary btn-sm">
-                  <i className="fas fa-upload"></i> Change Logo
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                  />
-                </label>
-                {form.org_logo && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm text-danger"
-                    onClick={() => setForm({ ...form, org_logo: "" })}
-                  >
-                    <i className="fas fa-trash"></i> Remove
-                  </button>
-                )}
-                <p className="field-hint">Used in your invoices and emails</p>
+
+              {/* QR Code Area */}
+              <div className="logo-edit-wrapper">
+                <div className="logo-preview-large">
+                  {form.org_qr_code ? (
+                    <img src={form.org_qr_code} alt="QR Code" />
+                  ) : (
+                    <div className="logo-placeholder">
+                      <i className="fas fa-qrcode"></i>
+                      <span>No QR</span>
+                    </div>
+                  )}
+                </div>
+                <div className="logo-controls">
+                  <label className="btn btn-secondary btn-sm">
+                    <i className="fas fa-upload"></i> {form.org_qr_code ? 'Change QR' : 'Upload QR Code'}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'qr')}
+                    />
+                  </label>
+                  {form.org_qr_code && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm text-danger"
+                      onClick={() => setForm({ ...form, org_qr_code: "" })}
+                    >
+                      <i className="fas fa-trash"></i> Remove
+                    </button>
+                  )}
+                  <p className="field-hint">Used for Scan & Pay</p>
+                </div>
               </div>
             </div>
           </div>
@@ -160,6 +232,18 @@ export default function Profile() {
                       setForm({ ...form, org_name: e.target.value })
                     }
                     required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Business Tagline</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={form.org_tagline}
+                    onChange={(e) =>
+                      setForm({ ...form, org_tagline: e.target.value })
+                    }
+                    placeholder="e.g. Your Partner in Success"
                   />
                 </div>
                 <div className="form-group">
@@ -254,6 +338,74 @@ export default function Profile() {
 
             <div className="profile-section">
               <h3 className="section-title">
+                <i className="fas fa-university"></i> Bank Details
+              </h3>
+              <div className="form-grid cols-2">
+                <div className="form-group">
+                  <label>Bank Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={form.org_bank_name}
+                    onChange={(e) =>
+                      setForm({ ...form, org_bank_name: e.target.value })
+                    }
+                    placeholder="e.g. State Bank of India"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Account Number</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={form.org_bank_account}
+                    onChange={(e) =>
+                      setForm({ ...form, org_bank_account: e.target.value })
+                    }
+                    placeholder="XXXX XXXX XXXX"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>IFSC Code</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={form.org_bank_ifsc}
+                    onChange={(e) =>
+                      setForm({ ...form, org_bank_ifsc: e.target.value })
+                    }
+                    placeholder="SBIN0001234"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Branch</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={form.org_bank_branch}
+                    onChange={(e) =>
+                      setForm({ ...form, org_bank_branch: e.target.value })
+                    }
+                    placeholder="Koramangala, Bangalore"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>UPI ID (for QR Code)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={form.org_upi_id}
+                    onChange={(e) =>
+                      setForm({ ...form, org_upi_id: e.target.value })
+                    }
+                    placeholder="yourname@upi"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="profile-section">
+              <h3 className="section-title">
                 <i className="fas fa-address-book"></i> Contact Info
               </h3>
               <div className="form-grid">
@@ -277,6 +429,18 @@ export default function Profile() {
                     onChange={(e) =>
                       setForm({ ...form, org_phone: e.target.value })
                     }
+                  />
+                </div>
+                <div className="form-group full-width">
+                  <label>Website</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={form.org_website}
+                    onChange={(e) =>
+                      setForm({ ...form, org_website: e.target.value })
+                    }
+                    placeholder="www.yourcompany.com"
                   />
                 </div>
                 <div className="form-group full-width">
@@ -313,6 +477,18 @@ export default function Profile() {
           </button>
         </div>
       </form>
+
+      {showCropper && (
+        <ImageCropper
+          image={tempImage}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            setShowCropper(false);
+            setTempImage(null);
+          }}
+          aspect={cropTarget === 'logo' ? 1 : 1}
+        />
+      )}
 
       {toast && (
         <Toast
