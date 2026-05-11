@@ -353,6 +353,13 @@ export default function History() {
                 >
                   POs
                 </button>
+                <button
+                  className={`filter-pill ${filterType === "credit_note" ? "active" : ""}`}
+                  onClick={() => setFilterType("credit_note")}
+                  id="filter-cns"
+                >
+                  Credit Notes
+                </button>
               </div>
             </div>
 
@@ -441,10 +448,15 @@ export default function History() {
                   </td>
                   <td>
                     <span
-                      className={`badge ${doc.doc_type === "invoice" ? "badge-blue" : "badge-orange"}`}
+                      className={`badge ${
+                        doc.doc_type === "invoice" ? "badge-blue" : 
+                        doc.doc_type === "credit_note" ? "badge-maroon" : "badge-orange"
+                      }`}
                     >
                       {doc.doc_type === "invoice"
                         ? "Invoice"
+                        : doc.doc_type === "credit_note"
+                        ? "Credit Note"
                         : "Purchase Order"}
                     </span>
                   </td>
@@ -500,10 +512,15 @@ export default function History() {
                   <i className="fas fa-file-invoice"></i> {viewDoc.doc_number}
                 </h2>
                 <span
-                  className={`badge ${viewDoc.doc_type === "invoice" ? "badge-blue" : "badge-orange"}`}
+                  className={`badge ${
+                    viewDoc.doc_type === "invoice" ? "badge-blue" : 
+                    viewDoc.doc_type === "credit_note" ? "badge-maroon" : "badge-orange"
+                  }`}
                 >
                   {viewDoc.doc_type === "invoice"
                     ? "Invoice"
+                    : viewDoc.doc_type === "credit_note"
+                    ? "Credit Note"
                     : "Purchase Order"}
                 </span>
                 <span

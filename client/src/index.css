@@ -4104,3 +4104,10 @@ textarea.form-input {
     gap: 12px;
   }
 }
+/* Badge Styles */
+.badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; }
+.badge-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.badge-orange { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.badge-maroon { background: rgba(128, 0, 0, 0.15); color: #ff6b6b; }
+.badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.badge-gray { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }

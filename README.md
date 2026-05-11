@@ -47,31 +47,42 @@ One implementation note: we use `.output('blob')` instead of the default filenam
 
 ---
 
+---
+
 ## Features
 
-- **Dual-Mode UI Architecture** — seamlessly switch between a lean, logistics-focused Purchase Order form and a comprehensive GST Tax Invoice form. UI fields adapt automatically.
-- **Enterprise Purchase Orders** — specialized GimBooks-inspired PO template featuring advanced logistics (Requisitioner, F.O.B., Ship Via, Payment Terms), Vendor PAN/GSTIN, and custom 'Ship To' logic.
-- **Dynamic Theming** — distinctive professional aesthetics: a sleek Teal theme for Invoices and an authoritative Blue theme tailored specifically for Purchase Orders.
-- **Pixel-Perfect PDF Export** — A4-calibrated PDF generation with dynamic edge-to-edge rendering, custom branding stamps, and automatic zero-balance/discount calculations.
-- **Live Preview** — real-time document rendering. What you see perfectly matches the generated PDF.
-- **Document History & Auth** — secure user authentication, persistent document history, and auto-save capabilities.
-- **GST Compliance** — full support for Indian financial formatting, HSN codes, and CGST/SGST breakdowns.
+- **Unified Billing Suite** — Seamlessly switch between **Invoices**, **Purchase Orders**, and **Credit Notes**. Each document type has its own specialized form and professional template.
+- **Recurring Invoices** — Built-in recurrence engine (Weekly, Monthly, Quarterly, etc.) to handle automated future billing cycles for regular clients.
+- **High-Density "Zoho" UI** — Professionally compact, glassmorphism-inspired interface designed for enterprise data entry. Shrinkable headers and optimized grid layouts maximize screen real estate.
+- **GST & HSN Compliance** — Automatic tax breakdowns (CGST/SGST), HSN/SAC code tracking, and GST-compliant total calculations.
+- **Email Delivery** — Send generated documents directly to clients from the document viewer using the integrated mail service.
+- **Live Preview & PDF Export** — Real-time rendering with A4-calibrated PDF generation using `html2pdf.js`. What you see is exactly what you get.
+- **Document History & Stats** — Track your revenue and pending bills with a dedicated History dashboard, featuring advanced search, filtering, and sorting.
+
+---
+
+## Testing & Review
+
+To test the application with pre-populated data (all columns filled), use the following test account:
+
+- **Email:** `test@docuforge.com`
+- **Password:** `password123`
+
+This account includes sample Invoices, POs, and Credit Notes to demonstrate the conditional rendering and dashboard analytics.
 
 ---
 
 ## Known Issues
 
-- **External images**: `html2canvas` can choke on high-res images from external URLs, especially if CORS is an issue. Images may render slowly or not at all.
-- **Long tables**: Multi-page tables sometimes need a nudge with `page-break-inside: avoid` in CSS to render cleanly across pages. Works fine for most typical invoices.
-- **Render Free Tier**: The backend API is hosted on Render's free tier, so the first request after a period of inactivity may take a few seconds while the service cold-starts. The frontend is on Vercel and loads instantly.
+- **External images**: `html2canvas` can sometimes struggle with high-res external images due to CORS. Local or base64 images work best.
+- **Cold Starts**: The backend is hosted on a free tier, so the first request might take a moment to wake up the server.
 
 ---
 
-## What's Missing (Roadmap-ish)
+## Roadmap
 
-These didn't make the cut for now, but they're the obvious next steps:
+- **Recurring Automation** — Implement a background worker to automatically generate and email scheduled recurring invoices.
+- **Cloud Storage** — Permanent PDF hosting on AWS S3 or Google Cloud Storage.
+- **Template Gallery** — Multiple professional themes (Modern, Minimal, Bold, etc.) for every document type.
+- **Inventory Sync** — Track item stock levels automatically when invoices or POs are issued.
 
-- **Cloud PDF storage** — Right now PDFs are generated on the fly and not stored. Hooking up S3 or GCS would let you share persistent links.
-- **User roles** — Admin/Staff separation for teams with multiple people generating docs.
-- **Email delivery** — Send the PDF directly from the app via SMTP or SendGrid.
-- **More templates** — A template gallery would open it up considerably.
