@@ -4,7 +4,7 @@ I built DocuForge because generating GST-compliant invoices felt way more
 painful than it should be. Fill in a form, see a live preview, download a 
 clean PDF. That's it.
 
-🔗 Live App: docuforge-xi.vercel.app
+🔗 Live App: https://docuforge-xi.vercel.app
 
 ---
 
