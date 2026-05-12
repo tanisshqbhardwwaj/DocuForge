@@ -107,12 +107,3 @@ behavior that crept in with UUID-based auto-names.
   Admin/staff separation would make it usable for small teams.
 
 ---
-
-## Try it with test data
-
-If you want to see the app with everything already filled in:
-
-- Email: `test@docuforge.com`  
-- Password: `password123`
-
-This account has sample invoices, POs, and credit notes preloaded.
