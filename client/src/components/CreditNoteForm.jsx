@@ -391,6 +391,8 @@ export default function CreditNoteForm({
         </div>
       </section>
 
+
+
       {/* Terms */}
       <section className="form-section glass-card full-width">
         <h2 className="section-title"><i className="fas fa-sticky-note"></i> Terms & Conditions</h2>

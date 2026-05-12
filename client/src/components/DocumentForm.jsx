@@ -540,15 +540,17 @@ export default function DocumentForm({
 
       {/* Payment Tracking */}
       <section className="form-section glass-card">
-        <h2 className="section-title"><i className="fas fa-credit-card"></i> Payment Status</h2>
+        <h2 className="section-title">
+          <i className="fas fa-credit-card"></i> {formData.title === 'CREDIT NOTE' ? 'Settlement Status' : 'Payment Status'}
+        </h2>
         <div className="form-grid cols-2">
           <div className="form-group">
             <label htmlFor="input-payment-status">Status</label>
             <select id="input-payment-status" className="form-input"
               value={formData.payment_status}
               onChange={e => onChange('payment_status', e.target.value)}>
-              <option value="unpaid">Unpaid</option>
-              <option value="paid">Paid</option>
+              <option value="unpaid">{formData.title === 'CREDIT NOTE' ? 'Non-Settled' : 'Unpaid'}</option>
+              <option value="paid">{formData.title === 'CREDIT NOTE' ? 'Settled' : 'Paid'}</option>
             </select>
           </div>
 

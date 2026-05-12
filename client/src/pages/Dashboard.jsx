@@ -37,10 +37,15 @@ export default function Dashboard() {
     } catch { return dateStr; }
   };
 
-  // Stats
-  const totalRevenue = documents.reduce((s, d) => s + (d.total || 0), 0);
-  const paidAmount = documents.filter(d => d.payment_status === "paid").reduce((s, d) => s + (d.total || 0), 0);
-  const pendingAmount = totalRevenue - paidAmount;
+  // Financial Calculations
+  const invoices = documents.filter(d => d.doc_type === "invoice");
+  const invoiceTotal = invoices.reduce((s, d) => s + (d.total || 0), 0);
+  const paidInvoiceAmount = invoices.filter(d => d.payment_status === "paid").reduce((s, d) => s + (d.total || 0), 0);
+  const pendingInvoiceAmount = invoiceTotal - paidInvoiceAmount;
+  
+  const creditNoteTotal = documents.filter(d => d.doc_type === "credit_note").reduce((s, d) => s + (d.total || 0), 0);
+  const poTotal = documents.filter(d => d.doc_type === "purchase_order").reduce((s, d) => s + (d.total || 0), 0);
+
   const totalDocs = documents.length;
 
   // Unique clients
@@ -73,7 +78,7 @@ export default function Dashboard() {
     );
   };
 
-  const paidPct = totalRevenue > 0 ? Math.round((paidAmount / totalRevenue) * 100) : 0;
+  const paidPct = invoiceTotal > 0 ? Math.round((paidInvoiceAmount / invoiceTotal) * 100) : 0;
   const pendingPct = 100 - paidPct;
 
   const userName = user?.org_name || user?.company_name || user?.email?.split("@")[0] || "User";
@@ -84,7 +89,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-page">
-      {/* Main Content */}
       <div className="dashboard-main">
         {/* Welcome Header */}
         <div className="dash-welcome-bar">
@@ -142,20 +146,29 @@ export default function Dashboard() {
         <div className="dash-stats-grid">
           <div className="dash-stat-card">
             <div className="dash-stat-icon" style={{ background: 'rgba(99,102,241,0.15)' }}>
-              <i className="fas fa-chart-line" style={{ color: '#6366f1' }}></i>
+              <i className="fas fa-file-invoice-dollar" style={{ color: '#6366f1' }}></i>
             </div>
             <div className="dash-stat-body">
-              <span className="dash-stat-value">{formatCurrency(totalRevenue)}</span>
-              <span className="dash-stat-label">Total Revenue</span>
+              <span className="dash-stat-value">{formatCurrency(invoiceTotal)}</span>
+              <span className="dash-stat-label">Invoice Total</span>
+            </div>
+          </div>
+          <div className="dash-stat-card">
+            <div className="dash-stat-icon" style={{ background: 'rgba(244,63,94,0.15)' }}>
+              <i className="fas fa-minus-square" style={{ color: '#f43f5e' }}></i>
+            </div>
+            <div className="dash-stat-body">
+              <span className="dash-stat-value">{formatCurrency(creditNoteTotal)}</span>
+              <span className="dash-stat-label">Credit Note Total</span>
             </div>
           </div>
           <div className="dash-stat-card">
             <div className="dash-stat-icon" style={{ background: 'rgba(59,130,246,0.15)' }}>
-              <i className="fas fa-file-alt" style={{ color: '#3b82f6' }}></i>
+              <i className="fas fa-shopping-cart" style={{ color: '#3b82f6' }}></i>
             </div>
             <div className="dash-stat-body">
-              <span className="dash-stat-value">{totalDocs}</span>
-              <span className="dash-stat-label">Total Documents</span>
+              <span className="dash-stat-value">{formatCurrency(poTotal)}</span>
+              <span className="dash-stat-label">PO Total</span>
             </div>
           </div>
           <div className="dash-stat-card">
@@ -163,17 +176,8 @@ export default function Dashboard() {
               <i className="fas fa-check-circle" style={{ color: '#10b981' }}></i>
             </div>
             <div className="dash-stat-body">
-              <span className="dash-stat-value">{formatCurrency(paidAmount)}</span>
-              <span className="dash-stat-label">Paid Amount</span>
-            </div>
-          </div>
-          <div className="dash-stat-card">
-            <div className="dash-stat-icon" style={{ background: 'rgba(244,63,94,0.15)' }}>
-              <i className="fas fa-exclamation-circle" style={{ color: '#f43f5e' }}></i>
-            </div>
-            <div className="dash-stat-body">
-              <span className="dash-stat-value">{formatCurrency(pendingAmount)}</span>
-              <span className="dash-stat-label">Pending Amount</span>
+              <span className="dash-stat-value">{formatCurrency(paidInvoiceAmount)}</span>
+              <span className="dash-stat-label">Paid Invoices</span>
             </div>
           </div>
         </div>
@@ -231,7 +235,6 @@ export default function Dashboard() {
                       <td>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button className="dash-icon-btn" title="View" onClick={() => navigate("/history")}><i className="fas fa-eye"></i></button>
-                          <button className="dash-icon-btn" title="More"><i className="fas fa-ellipsis-v"></i></button>
                         </div>
                       </td>
                     </tr>
@@ -259,7 +262,6 @@ export default function Dashboard() {
 
       {/* Right Sidebar */}
       <div className="dashboard-sidebar">
-        {/* Recent Clients */}
         <div className="dash-sidebar-card">
           <div className="dash-sidebar-header">
             <h3>Recent Clients</h3>
@@ -284,7 +286,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Analytics Overview */}
         <div className="dash-sidebar-card">
           <div className="dash-sidebar-header">
             <h3>Analytics Overview</h3>
@@ -303,26 +304,25 @@ export default function Dashboard() {
                 )}
               </svg>
               <div className="dash-donut-center">
-                <span className="dash-donut-value">{formatCurrency(totalRevenue)}</span>
-                <span className="dash-donut-label">Total Revenue</span>
+                <span className="dash-donut-value">{formatCurrency(invoiceTotal)}</span>
+                <span className="dash-donut-label">Invoice Revenue</span>
               </div>
             </div>
             <div className="dash-legend">
               <div className="dash-legend-item">
                 <span className="dash-legend-dot" style={{ background: '#10b981' }}></span>
                 <span>Paid</span>
-                <span className="dash-legend-val">{formatCurrency(paidAmount)} ({paidPct}%)</span>
+                <span className="dash-legend-val">{formatCurrency(paidInvoiceAmount)} ({paidPct}%)</span>
               </div>
               <div className="dash-legend-item">
                 <span className="dash-legend-dot" style={{ background: '#f43f5e' }}></span>
                 <span>Pending</span>
-                <span className="dash-legend-val">{formatCurrency(pendingAmount)} ({pendingPct}%)</span>
+                <span className="dash-legend-val">{formatCurrency(pendingInvoiceAmount)} ({pendingPct}%)</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Shortcuts */}
         <div className="dash-sidebar-card">
           <div className="dash-sidebar-header">
             <h3>Shortcuts</h3>
@@ -332,7 +332,7 @@ export default function Dashboard() {
               <div className="dash-shortcut-icon"><i className="fas fa-building"></i></div>
               <div className="dash-shortcut-info">
                 <span className="dash-shortcut-title">Business Profile</span>
-                <span className="dash-shortcut-desc">Update your business details</span>
+                <span className="dash-shortcut-desc">Update your details</span>
               </div>
               <i className="fas fa-chevron-right dash-shortcut-arrow"></i>
             </div>
@@ -341,14 +341,6 @@ export default function Dashboard() {
               <div className="dash-shortcut-info">
                 <span className="dash-shortcut-title">Document History</span>
                 <span className="dash-shortcut-desc">View all past documents</span>
-              </div>
-              <i className="fas fa-chevron-right dash-shortcut-arrow"></i>
-            </div>
-            <div className="dash-shortcut" onClick={() => navigate("/create")}>
-              <div className="dash-shortcut-icon"><i className="fas fa-plus-circle"></i></div>
-              <div className="dash-shortcut-info">
-                <span className="dash-shortcut-title">Create Document</span>
-                <span className="dash-shortcut-desc">Invoice, PO, Credit Note</span>
               </div>
               <i className="fas fa-chevron-right dash-shortcut-arrow"></i>
             </div>

@@ -126,6 +126,8 @@ export default function History() {
           ...prev,
           ...paymentData,
           payment_status: paymentData.status,
+          related_invoice_number: paymentData.related_invoice_number,
+          related_invoice_date: paymentData.related_invoice_date,
         }));
       }
     } catch (err) {
@@ -228,17 +230,32 @@ export default function History() {
     bank_account: doc.bank_account || "",
     bank_ifsc: doc.bank_ifsc || "",
     bank_branch: doc.bank_branch || "",
+    related_invoice_number: doc.related_invoice_number || "",
+    related_invoice_date: doc.related_invoice_date || "",
   });
 
   // Stats
-  const totalDocs = documents.length;
-  const totalValue = documents.reduce((sum, d) => sum + (d.total || 0), 0);
-  const paidValue = documents
-    .filter((d) => d.payment_status === "paid")
+  const totalInvoices = documents
+    .filter(d => d.doc_type === 'invoice')
     .reduce((sum, d) => sum + (d.total || 0), 0);
-  const unpaidCount = documents.filter(
-    (d) => d.payment_status !== "paid",
+  
+  const totalCreditNotes = documents
+    .filter(d => d.doc_type === 'credit_note')
+    .reduce((sum, d) => sum + (d.total || 0), 0);
+
+  const totalPOs = documents
+    .filter(d => d.doc_type === 'purchase_order')
+    .reduce((sum, d) => sum + (d.total || 0), 0);
+
+  const paidInvoiceValue = documents
+    .filter((d) => d.doc_type === 'invoice' && d.payment_status === "paid")
+    .reduce((sum, d) => sum + (d.total || 0), 0);
+
+  const unpaidInvoicesCount = documents.filter(
+    (d) => d.doc_type === 'invoice' && d.payment_status !== "paid",
   ).length;
+
+  const totalDocs = documents.length;
 
   if (loading) {
     return (
@@ -270,41 +287,50 @@ export default function History() {
       </div>
 
       {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card" id="stat-total">
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <div className="stat-card" id="stat-invoice">
           <div className="stat-icon purple">
-            <i className="fas fa-file-alt"></i>
+            <i className="fas fa-file-invoice"></i>
           </div>
           <div className="stat-info">
-            <span className="stat-value">{totalDocs}</span>
-            <span className="stat-label">Total Documents</span>
+            <span className="stat-value">{formatCurrency(totalInvoices, "INR")}</span>
+            <span className="stat-label">Total Invoices</span>
           </div>
         </div>
-        <div className="stat-card" id="stat-revenue">
-          <div className="stat-icon green">
-            <i className="fas fa-rupee-sign"></i>
+        <div className="stat-card" id="stat-credit-note">
+          <div className="stat-icon maroon">
+            <i className="fas fa-minus-square"></i>
           </div>
           <div className="stat-info">
-            <span className="stat-value">{formatCurrency(totalValue, "INR")}</span>
-            <span className="stat-label">Total Document Value (INR)</span>
+            <span className="stat-value">{formatCurrency(totalCreditNotes, "INR")}</span>
+            <span className="stat-label">Total Credit Notes</span>
+          </div>
+        </div>
+        <div className="stat-card" id="stat-po">
+          <div className="stat-icon orange">
+            <i className="fas fa-shopping-cart"></i>
+          </div>
+          <div className="stat-info">
+            <span className="stat-value">{formatCurrency(totalPOs, "INR")}</span>
+            <span className="stat-label">Total Purchase Orders</span>
           </div>
         </div>
         <div className="stat-card" id="stat-paid">
-          <div className="stat-icon blue">
+          <div className="stat-icon green">
             <i className="fas fa-check-circle"></i>
           </div>
           <div className="stat-info">
-            <span className="stat-value">{formatCurrency(paidValue, "INR")}</span>
-            <span className="stat-label">Total Paid (INR)</span>
+            <span className="stat-value">{formatCurrency(paidInvoiceValue, "INR")}</span>
+            <span className="stat-label">Total Paid (Invoices)</span>
           </div>
         </div>
-        <div className="stat-card" id="stat-unpaid">
-          <div className="stat-icon orange">
+        <div className="stat-card" id="stat-pending">
+          <div className="stat-icon blue">
             <i className="fas fa-clock"></i>
           </div>
           <div className="stat-info">
-            <span className="stat-value">{unpaidCount}</span>
-            <span className="stat-label">Unpaid Bills</span>
+            <span className="stat-value">{unpaidInvoicesCount}</span>
+            <span className="stat-label">Unpaid Invoices</span>
           </div>
         </div>
       </div>
@@ -466,7 +492,11 @@ export default function History() {
                     <span
                       className={`badge ${doc.payment_status === "paid" ? "badge-green" : "badge-gray"}`}
                     >
-                      {doc.payment_status === "paid" ? "Paid" : "Unpaid"}
+                      {doc.doc_type === "credit_note"
+                        ? (doc.payment_status === "paid" ? "Settled" : "Non-Settled")
+                        : doc.doc_type === "purchase_order"
+                        ? (doc.payment_status === "paid" ? "Closed" : "Pending")
+                        : (doc.payment_status === "paid" ? "Paid" : "Unpaid")}
                     </span>
                   </td>
                   <td className="total-cell">{formatCurrency(doc.total, doc.currency)}</td>
@@ -526,7 +556,11 @@ export default function History() {
                 <span
                   className={`badge ${viewDoc.payment_status === "paid" ? "badge-green" : "badge-gray"}`}
                 >
-                  {viewDoc.payment_status === "paid" ? "Paid" : "Unpaid"}
+                  {viewDoc.doc_type === "credit_note"
+                    ? (viewDoc.payment_status === "paid" ? "Settled" : "Non-Settled")
+                    : viewDoc.doc_type === "purchase_order"
+                    ? (viewDoc.payment_status === "paid" ? "Closed" : "Pending")
+                    : (viewDoc.payment_status === "paid" ? "Paid" : "Unpaid")}
                 </span>
               </div>
               <div
@@ -563,7 +597,7 @@ export default function History() {
               <div className="modal-sidebar">
                 <div className="sidebar-section">
                   <h3>
-                    <i className="fas fa-credit-card"></i> Payment Status
+                    <i className="fas fa-credit-card"></i> {viewDoc.doc_type === "credit_note" ? "Settlement Status" : viewDoc.doc_type === "purchase_order" ? "Order Status" : "Payment Status"}
                   </h3>
                   <div className="form-group">
                     <label>Status</label>
@@ -577,47 +611,89 @@ export default function History() {
                       }
                       className="form-input"
                     >
-                      <option value="unpaid">Unpaid</option>
-                      <option value="paid">Paid</option>
+                      <option value="unpaid">
+                        {viewDoc.doc_type === "credit_note" ? "Non-Settled" : viewDoc.doc_type === "purchase_order" ? "Pending" : "Unpaid"}
+                      </option>
+                      <option value="paid">
+                        {viewDoc.doc_type === "credit_note" ? "Settled" : viewDoc.doc_type === "purchase_order" ? "Closed" : "Paid"}
+                      </option>
                     </select>
                   </div>
 
                   {viewDoc.payment_status === "paid" && (
                     <div className="payment-details-edit fade-in">
-                      <div className="form-group">
-                        <label>Method</label>
-                        <select
-                          value={viewDoc.payment_method || ""}
-                          onChange={(e) =>
-                            setViewDoc({
-                              ...viewDoc,
-                              payment_method: e.target.value,
-                            })
-                          }
-                          className="form-input"
-                        >
-                          <option value="">Select Method</option>
-                          <option value="Cash">Cash</option>
-                          <option value="Online">Online (UPI/Card)</option>
-                          <option value="Bank Transfer">Bank Transfer</option>
-                          <option value="Cheque">Cheque</option>
-                        </select>
-                      </div>
-                      <div className="form-group">
-                        <label>Transaction ID / Ref</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={viewDoc.transaction_id || ""}
-                          onChange={(e) =>
-                            setViewDoc({
-                              ...viewDoc,
-                              transaction_id: e.target.value,
-                            })
-                          }
-                          placeholder="TXN ID"
-                        />
-                      </div>
+                      {viewDoc.doc_type === 'invoice' && (
+                        <>
+                          <div className="form-group">
+                            <label>Method</label>
+                            <select
+                              value={viewDoc.payment_method || ""}
+                              onChange={(e) =>
+                                setViewDoc({
+                                  ...viewDoc,
+                                  payment_method: e.target.value,
+                                })
+                              }
+                              className="form-input"
+                            >
+                              <option value="">Select Method</option>
+                              <option value="Cash">Cash</option>
+                              <option value="Online">Online (UPI/Card)</option>
+                              <option value="Bank Transfer">Bank Transfer</option>
+                              <option value="Cheque">Cheque</option>
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Transaction ID / Ref</label>
+                            <input
+                              type="text"
+                              className="form-input"
+                              value={viewDoc.transaction_id || ""}
+                              onChange={(e) =>
+                                setViewDoc({
+                                  ...viewDoc,
+                                  transaction_id: e.target.value,
+                                })
+                              }
+                              placeholder="TXN ID"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {viewDoc.doc_type === 'credit_note' && (
+                        <>
+                          <div className="form-group">
+                            <label>Adjusted Invoice No.</label>
+                            <input
+                              type="text"
+                              className="form-input"
+                              value={viewDoc.related_invoice_number || ""}
+                              onChange={(e) =>
+                                setViewDoc({
+                                  ...viewDoc,
+                                  related_invoice_number: e.target.value,
+                                })
+                              }
+                              placeholder="e.g. INV-1001"
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Adjusted Invoice Date</label>
+                            <input
+                              type="date"
+                              className="form-input"
+                              value={viewDoc.related_invoice_date || ""}
+                              onChange={(e) =>
+                                setViewDoc({
+                                  ...viewDoc,
+                                  related_invoice_date: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -629,6 +705,8 @@ export default function History() {
                         status: viewDoc.payment_status,
                         method: viewDoc.payment_method,
                         transaction_id: viewDoc.transaction_id,
+                        related_invoice_number: viewDoc.related_invoice_number,
+                        related_invoice_date: viewDoc.related_invoice_date,
                       })
                     }
                   >

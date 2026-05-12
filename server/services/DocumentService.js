@@ -29,13 +29,15 @@ class DocumentService {
   }
 
   static updatePayment(id, userId, paymentData) {
-    const { status, method, transaction_id } = paymentData;
+    const { status, method, transaction_id, related_invoice_number, related_invoice_date } = paymentData;
     return DocumentRepository.updatePaymentStatus(
       id,
       userId,
       status,
       method,
       transaction_id,
+      related_invoice_number,
+      related_invoice_date
     );
   }
 

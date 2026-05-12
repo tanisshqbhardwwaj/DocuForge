@@ -14,8 +14,9 @@ class DocumentRepository {
         tax_amount, total, discount, notes, terms,
         bank_name, bank_account, bank_ifsc, bank_branch,
         payment_status, payment_method, transaction_id,
-        po_number, po_date, shipping_date, transport_mode, transport_name, sales_person
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        po_number, po_date, shipping_date, transport_mode, transport_name, sales_person,
+        related_invoice_number, related_invoice_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       )
       .run(
@@ -58,6 +59,8 @@ class DocumentRepository {
         d.transport_mode || "",
         d.transport_name || "",
         d.sales_person || "",
+        d.related_invoice_number || "",
+        d.related_invoice_date || "",
       );
     return result.lastInsertRowid;
   }
@@ -82,18 +85,20 @@ class DocumentRepository {
       .run(id, userId);
   }
 
-  static updatePaymentStatus(id, userId, status, method, txId) {
+  static updatePaymentStatus(id, userId, status, method, txId, relatedInv = "", relatedDate = "") {
     return db
       .prepare(
         `
       UPDATE documents SET
         payment_status = ?,
         payment_method = ?,
-        transaction_id = ?
+        transaction_id = ?,
+        related_invoice_number = ?,
+        related_invoice_date = ?
       WHERE id = ? AND user_id = ?
     `,
       )
-      .run(status, method || "", txId || "", id, userId);
+      .run(status, method || "", txId || "", relatedInv || "", relatedDate || "", id, userId);
   }
 
   static findAll() {

@@ -139,6 +139,8 @@ const newColumns = [
   ["users", "org_upi_id", "TEXT DEFAULT ''"],
   ["users", "org_qr_code", "TEXT DEFAULT ''"],
   ["users", "org_theme_color", "TEXT DEFAULT '#0055d4'"],
+  ["documents", "related_invoice_number", "TEXT DEFAULT ''"],
+  ["documents", "related_invoice_date", "TEXT DEFAULT ''"],
 ];
 
 // Relax password_hash constraint if needed (SQLite doesn't support ALTER COLUMN easily, 
