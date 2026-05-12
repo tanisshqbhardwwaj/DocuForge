@@ -10,7 +10,7 @@ clean PDF. That's it.
 
 ## Running it locally
 
-You'll need Node.js v20+ and npm installed. Then:
+You'll need Node.js v19+ and npm installed. Then:
 
 ```bash
 # 1. Clone the repo
